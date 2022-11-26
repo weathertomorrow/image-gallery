@@ -1,5 +1,5 @@
 from typing import Callable,List
-from lib.images import GetImages
+from src.py.images import GetImages
 
 PageChangingFN = Callable[[int], tuple[List[str], int]]
 

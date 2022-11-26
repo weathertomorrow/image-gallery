@@ -4,11 +4,11 @@ import os
 from typing import cast, List, Union, Callable
 from modules.shared import Options
 
-from lib.config import RuntimeConfig, StaticConfig, ConfigurableConfig, TabConfig, BaseTabConfig
+from src.py.config import RuntimeConfig, StaticConfig, ConfigurableConfig, TabConfig, BaseTabConfig
 
-from lib.utils.int import strToNullableInt
-from lib.utils.guards import isNotEmpty, isEmpty
-from lib.utils.str import withPrefix
+from src.py.utils.int import strToNullableInt
+from src.py.utils.guards import isNotEmpty, isEmpty
+from src.py.utils.str import withPrefix
 
 def getRuntimeConfig(opts: Options, staticConfig: StaticConfig, defaultConfig: ConfigurableConfig) -> RuntimeConfig:
   configAsDict = { key: opts.__getattr__(getConfigFieldId(staticConfig, key)) for key in defaultConfig.keys() }

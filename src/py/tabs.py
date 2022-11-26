@@ -1,18 +1,18 @@
 import gradio
 
-from lib.config import TabConfig
-from lib.utils.str import withSuffix
-from lib.directories import makeIfMissing
+from src.py.config import TabConfig
+from src.py.utils.str import withSuffix
+from src.py.files import makeDirIfMissing
 
-from lib.ui.gallery import createGallery
-from lib.ui.sidePanel import createSidePanel
+from src.py.ui.gallery import createGallery
+from src.py.ui.sidePanel import createSidePanel
 
-from lib.images import makeGetImages, getImagesPerPage
-from lib.pages import makeChangePage, mageGoToLastPage, makeGoToFirstPage
+from src.py.images import makeGetImages, getImagesPerPage
+from src.py.pages import makeChangePage, mageGoToLastPage, makeGoToFirstPage
 
 
 def createTab(tabConfig: TabConfig):
-  makeIfMissing(tabConfig['path'])
+  makeDirIfMissing(tabConfig['path'])
 
   staticConfig = tabConfig["staticConfig"]
   runtimeConfig = tabConfig["runtimeConfig"]
@@ -32,3 +32,4 @@ def createTab(tabConfig: TabConfig):
   gallery['prevPage'].click(makeChangePage(getImages, imagesPerPage, -1), [gallery['pageIndex']], [gallery["gallery"], gallery['pageIndex']])
   gallery['firstPage'].click(makeGoToFirstPage(getImages), [gallery['pageIndex']], [gallery["gallery"], gallery['pageIndex']])
   gallery['lastPage'].click(mageGoToLastPage(getImages), [gallery['pageIndex']], [gallery["gallery"], gallery['pageIndex']])
+  gallery['pageIndex'].change(mageGoToLastPage(getImages), [gallery['pageIndex']], [gallery["gallery"], gallery['pageIndex']])

@@ -1,21 +1,15 @@
 import os
-from typing import List, Union, Iterator, Callable
+from typing import List, Iterator, Callable
 
-from lib.config import TabConfig
+from src.py.config import TabConfig
+from src.py.files import isImage, getImageFullPath
 
 def getImagesPerPage(tabConfig: TabConfig) -> int:
   return tabConfig['runtimeConfig']['page_rows'] * tabConfig['runtimeConfig']['page_columns']
 
-def getExtension(fileName: str) -> Union[str, None]:
-  return os.path.splitext(fileName)[1]
-
-def isImage(imageFileExtensions: List[str], file: os.DirEntry[str]) -> bool:
-  return file.is_file() and getExtension(file.name) in imageFileExtensions
-
-def getImageFullPath(config: TabConfig, path: str) -> str:
-  return f'<img src="file={os.path.join(config["staticConfig"]["script_path"], path)}" />'
-
 def makeRecurseOverImages(tabConfig: TabConfig, pageIndex: int, perPage: int):
+  staticConfig = tabConfig['staticConfig']
+
   def recurseOverImages(iterator: Iterator[os.DirEntry[str]], currentIndex: int, remaining: int = perPage) -> List[str]:
     if remaining == 0:
       return []
@@ -29,8 +23,8 @@ def makeRecurseOverImages(tabConfig: TabConfig, pageIndex: int, perPage: int):
     nextPage = currentIndex + 1
 
     return [
-      getImageFullPath(tabConfig, file.path), *recurseOverImages(iterator, nextPage, remaining - 1)
-    ] if isOnRightPage and isImage(tabConfig['staticConfig']['imageExtensions'], file) else [
+      getImageFullPath(staticConfig, file.path), *recurseOverImages(iterator, nextPage, remaining - 1)
+    ] if isOnRightPage and isImage(staticConfig['imageExtensions'], file) else [
       *recurseOverImages(iterator, nextPage, remaining)
     ]
 

@@ -3,10 +3,10 @@ import gradio
 from modules.script_callbacks import on_ui_settings, on_ui_tabs
 from modules.shared import opts, OptionInfo
 
-from lib.config import defaultConfigurableConfig, staticConfig, uiLabelsConfig
-from lib.utils.str import withSuffix
-from lib.utils.config import getRuntimeConfig, getCustomTabsConfigs, getBuiltinTabsConfig, getConfigFieldId
-from lib.tabs import createTab
+from src.py.config import defaultConfigurableConfig, staticConfig, uiLabelsConfig
+from src.py.utils.str import withSuffix
+from src.py.utils.config import getRuntimeConfig, getCustomTabsConfigs, getBuiltinTabsConfig, getConfigFieldId
+from src.py.tabs import createTab
 
 def setup_tabs():
   runtimeConfig = getRuntimeConfig(opts, staticConfig, defaultConfigurableConfig)
