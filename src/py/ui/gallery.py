@@ -12,7 +12,7 @@ class Gallery(TypedDict):
   nextPage: gradio.Button
   lastPage: gradio.Button
   gallery: gradio.Box
-  buttons: List[List[gradio.Button]]
+  buttons: List[List[gradio.Box]]
   hiddenImagesSrcContainer: gradio.HTML
 
 ImageClickHandler = Callable[[int, int], None]
@@ -21,8 +21,8 @@ def makeCreateButton(tabConfig: TabConfig, imageClickHandler: ImageClickHandler)
   suffixes = tabConfig["staticConfig"]["suffixes"]
 
   def createButton(column: int, row: int,):
-    button = gradio.Button(value = "", elem_id = getTabElementId(withPrefix(f'{column}_{row}', suffixes["imgButton"]), tabConfig))
-    button.click(lambda x = column, y = row: imageClickHandler(x, y))
+    button = gradio.Box(value = "", elem_id = getTabElementId(withPrefix(f'{column}_{row}', suffixes["imgButton"]), tabConfig))
+    # button.click(lambda x = column, y = row: imageClickHandler(x, y))
 
     return button
 
@@ -39,7 +39,7 @@ def createGallery(tabConfig: TabConfig, initialImagesSrcs: str, imageClickHandle
     with gradio.Row():
       firstPage = gradio.Button('First Page')
       prevPage = gradio.Button('Prev Page')
-      pageIndex = gradio.Number(value = 0, label = "Page Index")
+      pageIndex = gradio.Number(value = staticConfig["tabDefaults"]["pageIndex"], label = "Page Index")
       nextPage = gradio.Button('Next Page')
       lastPage = gradio.Button('Last Page')
 

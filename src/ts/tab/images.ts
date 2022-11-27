@@ -25,12 +25,40 @@ export const insertImagesIntoButtons = (imagesSources: string[], buttons: Elemen
   })
 }
 
-export const updateImages = (newImagesSources: string[], images: ImagesElements): void => {
-  images.forEach((image, i) => {
-    const source = newImagesSources[i]
-
-    if (!isNil(image) && !isNil(newImagesSources)) {
-      image.src = source
+export const makeChangeImagesVisiblity = (shouldBeVisible: boolean, images: ImagesElements) => () => {
+  images.forEach((image) => {
+    if (!isNil(image)) {
+      image.style.opacity = shouldBeVisible ? '1' : '0'
     }
   })
+}
+
+export type MakeUpdateImagesReturnValue = Readonly<{
+  shouldCancel: { current: boolean }
+  updateImages: (newImagesSources: string[], images: ImagesElements) => Promise<boolean>
+}>
+
+export const makeUpdateImages = (listener: (imageIndex: number) => void): MakeUpdateImagesReturnValue => {
+  const shouldCancel = { current: false }
+
+  return {
+    shouldCancel,
+    updateImages: async (newImagesSources, images) => {
+      // for loop instead of a foreach so that it can be cancelled early when user is changing pages quickly
+      for (let i = 0; i < images.length; i++) {
+        if (shouldCancel.current) return false
+
+        const image = images[i]
+        const source = newImagesSources[i]
+
+        if (!isNil(image) && !isNil(newImagesSources)) {
+          image.src = source
+
+          image.onload = () => listener(i)
+        }
+      }
+
+      return true
+    }
+  }
 }

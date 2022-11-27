@@ -2,6 +2,7 @@ from typing import TypedDict, TypeVar, Union, List
 
 from modules.paths import script_path
 from modules.shared import opts
+from src.py.sort import SortOrder, SortBy
 
 ConfigFieldDefaultValue = TypeVar('ConfigFieldDefaultValue')
 ConfigField = tuple[ConfigFieldDefaultValue, str]
@@ -35,6 +36,11 @@ class IdSuffixesConfigs(TypedDict):
   imgSrcs: str
   imgButton: str
 
+class TabDefaults(TypedDict):
+  pageIndex: int
+  sortBy: SortBy
+  sortOrder: SortOrder
+
 class StaticConfig(TypedDict):
   extensionId: str
   suffixes: IdSuffixesConfigs
@@ -42,6 +48,7 @@ class StaticConfig(TypedDict):
   builtinTabs: dict[str, str]
   scriptPath: str
   cssClassPrefix: str
+  tabDefaults: TabDefaults
 
 staticConfig: StaticConfig = {
   "extensionId": "images_gallery",
@@ -54,6 +61,11 @@ staticConfig: StaticConfig = {
     "imgSrcs": "imgSrcs",
     "imgButton": "imgButton",
   },
+  "tabDefaults": {
+    "pageIndex": 0,
+    "sortBy": SortBy.DATE,
+    "sortOrder": SortOrder.DESC
+  },
   "imageExtensions": [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"],
   "builtinTabs": {
     "txt2img": opts.outdir_txt2img_samples,
@@ -63,16 +75,18 @@ staticConfig: StaticConfig = {
   }
 }
 
+class GlobalConfig(TypedDict):
+  runtimeConfig: RuntimeConfig
+  staticConfig: StaticConfig
+
 class BaseTabConfig(TypedDict):
   displayName: str
   id: str
   maxSize: Union[int, None]
   path: str
 
-class TabConfig(BaseTabConfig):
-  runtimeConfig: RuntimeConfig
-  staticConfig: StaticConfig
-
+class TabConfig(BaseTabConfig, GlobalConfig):
+  pass
 
 class UILabelsConfig(TypedDict):
   extension_name: str

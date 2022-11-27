@@ -4,7 +4,7 @@ import os
 from typing import cast, List, Union, Callable
 from modules.shared import Options
 
-from src.py.config import RuntimeConfig, StaticConfig, ConfigurableConfig, TabConfig, BaseTabConfig
+from src.py.config import RuntimeConfig, StaticConfig, ConfigurableConfig, TabConfig, BaseTabConfig, GlobalConfig
 
 from src.py.utils.int import strToNullableInt
 from src.py.utils.guards import isNotEmpty, isEmpty
@@ -18,6 +18,12 @@ def getRuntimeConfig(opts: Options, staticConfig: StaticConfig, defaultConfig: C
   configAsDict["pageRows"] = int(configAsDict["pageRows"])
 
   return cast(RuntimeConfig, configAsDict)
+
+def getGlobalConfig(runtimeConfig: RuntimeConfig, staticConfig: StaticConfig) -> GlobalConfig:
+  return {
+    "runtimeConfig": runtimeConfig,
+    "staticConfig": staticConfig
+  }
 
 def getConfigFieldId(staticConfig: StaticConfig, fieldName: str) -> str:
   return withPrefix(staticConfig["extensionId"], fieldName)
@@ -68,35 +74,32 @@ def makeGenerateTabConfig(limits: TabSizeLimits, pathGetter: PathGetter):
 
   return generateTabConfig
 
-def makeExpandTabConfig(runtimeConfig: RuntimeConfig, staticConfig: StaticConfig):
+def makeExpandTabConfig(globalConfig: GlobalConfig):
   def expandTabConfig(tabConfig: BaseTabConfig) -> TabConfig:
     return {
       **tabConfig,
-      "runtimeConfig": runtimeConfig,
-      "staticConfig": staticConfig,
+      **globalConfig,
     }
 
   return expandTabConfig
 
-def getTabConfigs(config: RuntimeConfig, staticConfig: StaticConfig, tabs: List[str], pathGetter: PathGetter) -> List[TabConfig]:
+def getTabConfigs(globalConfig: GlobalConfig, tabs: List[str], pathGetter: PathGetter) -> List[TabConfig]:
   return list(
-    map(makeExpandTabConfig(config, staticConfig),
-      map(makeGenerateTabConfig(getTabLimits(config), pathGetter), tabs)
+    map(makeExpandTabConfig(globalConfig, ),
+      map(makeGenerateTabConfig(getTabLimits(globalConfig["runtimeConfig"]), pathGetter), tabs)
     )
   )
 
-def getCustomTabsConfigs(config: RuntimeConfig, staticConfig: StaticConfig) -> List[TabConfig]:
+def getCustomTabsConfigs(globalConfig: GlobalConfig) -> List[TabConfig]:
   return getTabConfigs(
-    config,
-    staticConfig,
-    list(filter(isNotEmpty, map(normalizeTabName, config["tabs"].split(',')))),
-    makeGetCustomTabPath(config)
+    globalConfig,
+    list(filter(isNotEmpty, map(normalizeTabName, globalConfig["runtimeConfig"]["tabs"].split(',')))),
+    makeGetCustomTabPath(globalConfig["runtimeConfig"])
   )
 
-def getBuiltinTabsConfig(config: RuntimeConfig, staticConfig: StaticConfig) -> List[TabConfig]:
+def getBuiltinTabsConfig(globalConfig: GlobalConfig) -> List[TabConfig]:
   return getTabConfigs(
-    config,
-    staticConfig,
-    list(staticConfig["builtinTabs"].keys()),
-    makeGetBuiltinTabPath(staticConfig)
+    globalConfig,
+    list(globalConfig["staticConfig"]["builtinTabs"].keys()),
+    makeGetBuiltinTabPath(globalConfig["staticConfig"])
   )

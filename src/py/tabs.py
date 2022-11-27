@@ -1,4 +1,5 @@
 import gradio
+from typing import cast
 
 from src.py.config import TabConfig
 from src.py.utils.tabs import getTabElementId
@@ -10,6 +11,7 @@ from src.py.ui.sidePanel import createSidePanel
 from src.py.images import makeGetImages, getImagesPerPage, imagesIntoData
 from src.py.pages import makeChangePage, makeGoToLastPage, makeGoToFirstPage, makeGoToPageWithAtIndex, PageChangingFNConfig
 
+
 def buttonClickHandler(x: int, y: int):
   print(x, y)
 
@@ -17,7 +19,9 @@ def createTab(tabConfig: TabConfig):
   makeDirIfMissing(tabConfig['path'])
 
   staticConfig = tabConfig["staticConfig"]
+  defaults = staticConfig['tabDefaults']
   runtimeConfig = tabConfig["runtimeConfig"]
+
 
   imagesPerPage = getImagesPerPage(tabConfig)
   getImages = makeGetImages(tabConfig, imagesPerPage)
@@ -26,7 +30,7 @@ def createTab(tabConfig: TabConfig):
     with gradio.Row():
       with gradio.Column():
         with gradio.Row():
-          gallery = createGallery(tabConfig, imagesIntoData(getImages(0)), buttonClickHandler)
+          gallery = createGallery(tabConfig, imagesIntoData(getImages(0, defaults['sortOrder'], defaults['sortBy'])), buttonClickHandler)
           sidePanel = createSidePanel(tabConfig)
 
   changePageConfig: PageChangingFNConfig = {
@@ -35,8 +39,17 @@ def createTab(tabConfig: TabConfig):
     'imagesPerPage': imagesPerPage
   }
 
-  gallery['nextPage'].click(makeChangePage(changePageConfig, 1), [gallery['pageIndex']], [gallery['hiddenImagesSrcContainer'], gallery['pageIndex']])
-  gallery['prevPage'].click(makeChangePage(changePageConfig, -1), [gallery['pageIndex']], [gallery['hiddenImagesSrcContainer'], gallery['pageIndex']])
-  gallery['firstPage'].click(makeGoToFirstPage(changePageConfig), [gallery['pageIndex']], [gallery['hiddenImagesSrcContainer'], gallery['pageIndex']])
-  gallery['lastPage'].click(makeGoToLastPage(changePageConfig), [gallery['pageIndex']], [gallery['hiddenImagesSrcContainer'], gallery['pageIndex']])
-  gallery['pageIndex'].change(makeGoToPageWithAtIndex(changePageConfig), [gallery['pageIndex']], [gallery['hiddenImagesSrcContainer'], gallery['pageIndex']])
+  galleryNavigationInputs = [gallery['pageIndex'], sidePanel['sortOrder'], sidePanel['sortBy']]
+  galleryNavigationOutputs = [gallery['hiddenImagesSrcContainer'], gallery['pageIndex'], sidePanel['sortOrder'], sidePanel['sortBy']]
+
+  # gradio doesn't expose the "Component" class and for whatever reason, this is not assignable to inputs if not passed directly
+  UNSAFE_CAST_galleryNavigationInputs = cast(None, galleryNavigationInputs)
+
+  gallery['nextPage'].click(makeChangePage(changePageConfig, 1), UNSAFE_CAST_galleryNavigationInputs, galleryNavigationOutputs)
+  gallery['prevPage'].click(makeChangePage(changePageConfig, -1), UNSAFE_CAST_galleryNavigationInputs, galleryNavigationOutputs)
+  gallery['firstPage'].click(makeGoToFirstPage(changePageConfig), UNSAFE_CAST_galleryNavigationInputs, galleryNavigationOutputs)
+  gallery['lastPage'].click(makeGoToLastPage(changePageConfig), UNSAFE_CAST_galleryNavigationInputs, galleryNavigationOutputs)
+  gallery['pageIndex'].change(makeGoToPageWithAtIndex(changePageConfig), UNSAFE_CAST_galleryNavigationInputs, galleryNavigationOutputs)
+
+  # sidePanel['sortBy'].change(makeGoToPageWithAtIndex(changePageConfig), galleryNavigationInputs, galleryNavigationOutputs)
+  # sidePanel['sortOrder'].change(makeGoToPageWithAtIndex(changePageConfig), galleryNavigationInputs, galleryNavigationOutputs)

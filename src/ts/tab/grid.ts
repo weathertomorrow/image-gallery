@@ -37,7 +37,6 @@ export const extractGridDimensions = (buttons: Element[]): Dimensions => {
 
 export const updateGridCssVariables = (dimensions: Dimensions): void => {
   const root = document.querySelector(':root')
-  console.log({ root })
 
   if (!isNil(root) && root instanceof HTMLElement) {
     root.style.setProperty('--images_gallery__columns', `${dimensions.columns}`)

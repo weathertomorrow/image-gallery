@@ -5,13 +5,13 @@ from modules.shared import opts, OptionInfo
 
 from src.py.config import defaultConfigurableConfig, staticConfig, uiLabelsConfig
 from src.py.utils.str import withSuffix
-from src.py.utils.config import getRuntimeConfig, getCustomTabsConfigs, getBuiltinTabsConfig, getConfigFieldId
+from src.py.utils.config import getRuntimeConfig, getCustomTabsConfigs, getBuiltinTabsConfig, getConfigFieldId, getGlobalConfig
 from src.py.tabs import createTab
 
 def setup_tabs():
-  runtimeConfig = getRuntimeConfig(opts, staticConfig, defaultConfigurableConfig)
-  defaultTabConfigs = getBuiltinTabsConfig(runtimeConfig, staticConfig)
-  customTabConfigs = getCustomTabsConfigs(runtimeConfig, staticConfig)
+  globalConfig = getGlobalConfig(getRuntimeConfig(opts, staticConfig, defaultConfigurableConfig), staticConfig)
+  defaultTabConfigs = getBuiltinTabsConfig(globalConfig)
+  customTabConfigs = getCustomTabsConfigs(globalConfig)
 
   # merge configs to avoid duplicates
   tabs = { tab["id"]: tab for tab in [*defaultTabConfigs, *customTabConfigs] }.values()
