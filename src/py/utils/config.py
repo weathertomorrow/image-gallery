@@ -11,11 +11,16 @@ from src.py.utils.guards import isNotEmpty, isEmpty
 from src.py.utils.str import withPrefix
 
 def getRuntimeConfig(opts: Options, staticConfig: StaticConfig, defaultConfig: ConfigurableConfig) -> RuntimeConfig:
-  configAsDict = { key: opts.__getattr__(getConfigFieldId(staticConfig, key)) for key in defaultConfig.keys() }
+  configAsDict = cast(RuntimeConfig, { key: opts.__getattr__(getConfigFieldId(staticConfig, key)) for key in defaultConfig.keys() })
+
+  # ¯\_(ツ)_/¯
+  configAsDict["pageColumns"] = int(configAsDict["pageColumns"])
+  configAsDict["pageRows"] = int(configAsDict["pageRows"])
+
   return cast(RuntimeConfig, configAsDict)
 
 def getConfigFieldId(staticConfig: StaticConfig, fieldName: str) -> str:
-  return withPrefix(staticConfig["extension_id"], fieldName)
+  return withPrefix(staticConfig["extensionId"], fieldName)
 
 def normalizeTabName(tabName: str) -> str:
   return tabName.lower().strip().capitalize()
@@ -35,7 +40,7 @@ def getTabLimits(config: RuntimeConfig) -> TabSizeLimits:
     tabName, limit = configPair.split(":")
     return (getTabId(tabName), strToNullableInt(limit))
 
-  return dict(map(getLimit, config["max_tabs_sizes"].split(",")))
+  return dict(map(getLimit, config["maxTabsSizes"].split(",")))
 
 PathGetter = Callable[[str], str]
 

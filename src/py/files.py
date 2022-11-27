@@ -16,4 +16,4 @@ def isImage(imageFileExtensions: List[str], file: DirEntry[str]) -> bool:
   return file.is_file() and getExtension(file.name) in imageFileExtensions
 
 def getImageFullPath(staticConfig: StaticConfig, filePath: str) -> str:
-  return path.join(staticConfig["script_path"], filePath)
+  return path.join(staticConfig["scriptPath"], filePath)

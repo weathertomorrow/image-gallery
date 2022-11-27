@@ -1,6 +1,8 @@
 import gradio
 from typing import TypedDict
 
+from src.py.config import TabConfig
+
 class ImageInfo(TypedDict):
   prompts: gradio.Textbox
   name: gradio.Textbox
@@ -11,7 +13,7 @@ class SidePanel(TypedDict):
   searchBox: gradio.Textbox
   image: ImageInfo
 
-def createSidePanel() -> SidePanel:
+def createSidePanel(tabConfig: TabConfig) -> SidePanel:
   with gradio.Column():
     with gradio.Row():
         sortBy = gradio.Radio(value = "date", choices = ["path name", "date"], label= "sort by" )

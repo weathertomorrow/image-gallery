@@ -1,15 +1,17 @@
 import gradio
 
 from src.py.config import TabConfig
-from src.py.utils.str import withSuffix
+from src.py.utils.tabs import getTabElementId
 from src.py.files import makeDirIfMissing
 
 from src.py.ui.gallery import createGallery
 from src.py.ui.sidePanel import createSidePanel
 
-from src.py.images import makeGetImages, getImagesPerPage
-from src.py.pages import makeChangePage, mageGoToLastPage, makeGoToFirstPage
+from src.py.images import makeGetImages, getImagesPerPage, imagesIntoData
+from src.py.pages import makeChangePage, makeGoToLastPage, makeGoToFirstPage, makeGoToPageWithAtIndex, PageChangingFNConfig
 
+def buttonClickHandler(x: int, y: int):
+  print(x, y)
 
 def createTab(tabConfig: TabConfig):
   makeDirIfMissing(tabConfig['path'])
@@ -20,16 +22,21 @@ def createTab(tabConfig: TabConfig):
   imagesPerPage = getImagesPerPage(tabConfig)
   getImages = makeGetImages(tabConfig, imagesPerPage)
 
-  with gradio.Tab(label = tabConfig["displayName"], elem_id = withSuffix(staticConfig['suffixes']['tab'], tabConfig["id"])):
-    with gradio.Row(elem_id = withSuffix(staticConfig['suffixes']['tab_row'], tabConfig['id'])):
+  with gradio.Tab(label = tabConfig["displayName"], elem_id = getTabElementId(staticConfig['suffixes']['galleryTab'], tabConfig)):
+    with gradio.Row():
       with gradio.Column():
         with gradio.Row():
-          gallery = createGallery(getImages(0))
-          sidePanel = createSidePanel()
+          gallery = createGallery(tabConfig, imagesIntoData(getImages(0)), buttonClickHandler)
+          sidePanel = createSidePanel(tabConfig)
 
-  gallery["gallery"].value
-  gallery['nextPage'].click(makeChangePage(getImages, imagesPerPage, 1), [gallery['pageIndex']], [gallery["gallery"], gallery['pageIndex']])
-  gallery['prevPage'].click(makeChangePage(getImages, imagesPerPage, -1), [gallery['pageIndex']], [gallery["gallery"], gallery['pageIndex']])
-  gallery['firstPage'].click(makeGoToFirstPage(getImages), [gallery['pageIndex']], [gallery["gallery"], gallery['pageIndex']])
-  gallery['lastPage'].click(mageGoToLastPage(getImages), [gallery['pageIndex']], [gallery["gallery"], gallery['pageIndex']])
-  gallery['pageIndex'].change(mageGoToLastPage(getImages), [gallery['pageIndex']], [gallery["gallery"], gallery['pageIndex']])
+  changePageConfig: PageChangingFNConfig = {
+    'getImages': getImages,
+    'postProcess': imagesIntoData,
+    'imagesPerPage': imagesPerPage
+  }
+
+  gallery['nextPage'].click(makeChangePage(changePageConfig, 1), [gallery['pageIndex']], [gallery['hiddenImagesSrcContainer'], gallery['pageIndex']])
+  gallery['prevPage'].click(makeChangePage(changePageConfig, -1), [gallery['pageIndex']], [gallery['hiddenImagesSrcContainer'], gallery['pageIndex']])
+  gallery['firstPage'].click(makeGoToFirstPage(changePageConfig), [gallery['pageIndex']], [gallery['hiddenImagesSrcContainer'], gallery['pageIndex']])
+  gallery['lastPage'].click(makeGoToLastPage(changePageConfig), [gallery['pageIndex']], [gallery['hiddenImagesSrcContainer'], gallery['pageIndex']])
+  gallery['pageIndex'].change(makeGoToPageWithAtIndex(changePageConfig), [gallery['pageIndex']], [gallery['hiddenImagesSrcContainer'], gallery['pageIndex']])

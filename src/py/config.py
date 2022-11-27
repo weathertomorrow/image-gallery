@@ -7,48 +7,52 @@ ConfigFieldDefaultValue = TypeVar('ConfigFieldDefaultValue')
 ConfigField = tuple[ConfigFieldDefaultValue, str]
 
 class RuntimeConfig(TypedDict):
-  page_columns: int
-  page_rows: int
+  pageColumns: int
+  pageRows: int
   root: str
   tabs: str
-  max_tabs_sizes: str
+  maxTabsSizes: str
 
 class ConfigurableConfig(TypedDict):
-  page_columns: ConfigField[int]
-  page_rows: ConfigField[int]
+  pageColumns: ConfigField[int]
+  pageRows: ConfigField[int]
   root: ConfigField[str]
   tabs: ConfigField[str]
-  max_tabs_sizes: ConfigField[str]
+  maxTabsSizes: ConfigField[str]
 
 defaultConfigurableConfig: ConfigurableConfig = {
-  "page_columns": (6, "Columns per gallery page"),
-  "page_rows": (6, "Rows per gallery page"),
+  "pageColumns": (6, "Columns per gallery page"),
+  "pageRows": (6, "Rows per gallery page"),
   "root": ("outputs", "Root gallery directory (directories for custom tabs will be created in it)"),
   "tabs": ("trash", "Custom tabs in the gallery"),
-  "max_tabs_sizes": ("trash:20", "Max amount of images to store in a tab (if not specified, then no limit)")
+  "maxTabsSizes": ("trash:20", "Max amount of images to store in a tab (if not specified, then no limit)")
 }
 
 class IdSuffixesConfigs(TypedDict):
-  allTabs: str
-  tab: str
-  tab_row: str
+  extensionTab: str
+  galleryTab: str
   gallery: str
+  imgSrcs: str
+  imgButton: str
 
 class StaticConfig(TypedDict):
-  extension_id: str
+  extensionId: str
   suffixes: IdSuffixesConfigs
   imageExtensions: List[str]
   builtinTabs: dict[str, str]
-  script_path: str
+  scriptPath: str
+  cssClassPrefix: str
 
 staticConfig: StaticConfig = {
-  "extension_id": "images_gallery",
-  "script_path": script_path,
+  "extensionId": "images_gallery",
+  "scriptPath": script_path,
+  "cssClassPrefix": "image_gallery",
   "suffixes": {
-    "allTabs": "tabs",
-    "tab": "tab",
-    "tab_row": "tab_row",
+    "extensionTab": "extensionTab",
+    "galleryTab": "galleryTab",
     "gallery": "gallery",
+    "imgSrcs": "imgSrcs",
+    "imgButton": "imgButton",
   },
   "imageExtensions": [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"],
   "builtinTabs": {

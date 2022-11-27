@@ -1,32 +1,41 @@
-from typing import Callable,List
+from typing import Callable, List, TypedDict
 from src.py.images import GetImages
 
-PageChangingFN = Callable[[int], tuple[List[str], int]]
+PostProcess = Callable[[List[str]], str]
+PageChangingFN = Callable[[int], tuple[str, int]]
 
-def makeChangePage(getImages: GetImages, imagesPerPage: int, offset: int) -> PageChangingFN:
+class PageChangingFNConfig(TypedDict):
+  getImages: GetImages
+  postProcess: PostProcess
+  imagesPerPage: int
+
+
+def makeChangePage(config: PageChangingFNConfig, offset: int) -> PageChangingFN:
   def handleNextPage(prevIndex: int):
     index = max(prevIndex + offset, 0)
-    images = getImages(index)
 
-    return (images, prevIndex) if len(images) != imagesPerPage else (images, index)
+    images = config["getImages"](index)
+    parsedImages = config["postProcess"](images)
 
-  return handleNextPage
-
-def makeGoToFirstPage(getImages: GetImages) -> PageChangingFN:
-  def handleNextPage(index: int):
-    return (getImages(0), 0)
+    return (parsedImages, prevIndex) if len(images) != config["imagesPerPage"] else (parsedImages, index)
 
   return handleNextPage
 
-def mageGoToLastPage(getImages: GetImages) -> PageChangingFN:
+def makeGoToFirstPage(config: PageChangingFNConfig) -> PageChangingFN:
   def handleNextPage(index: int):
-    return (getImages(0), 0)
+    return (config["postProcess"](config["getImages"](0)), 0)
+
+  return handleNextPage
+
+def makeGoToLastPage(config: PageChangingFNConfig) -> PageChangingFN:
+  def handleNextPage(index: int):
+    return (config["postProcess"](config["getImages"](0)), 0)
 
   return handleNextPage
 
 
-def mageGoToPageWithAtIndex(getImages: GetImages) -> PageChangingFN:
+def makeGoToPageWithAtIndex(config: PageChangingFNConfig) -> PageChangingFN:
   def handleNextPage(index: int):
-    return (getImages(index), index)
+    return (config["postProcess"](config["getImages"](index)), index)
 
   return handleNextPage

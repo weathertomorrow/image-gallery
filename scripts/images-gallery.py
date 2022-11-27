@@ -17,14 +17,14 @@ def setup_tabs():
   tabs = { tab["id"]: tab for tab in [*defaultTabConfigs, *customTabConfigs] }.values()
 
   with gradio.Blocks(analytics_enabled = False) as gallery:
-    with gradio.Tabs(elem_id = withSuffix(staticConfig["suffixes"]["allTabs"], staticConfig["extension_id"])):
+    with gradio.Tabs(elem_id = withSuffix(staticConfig["extensionId"], staticConfig["suffixes"]["extensionTab"])):
       for tab in tabs:
         createTab(tab)
 
-  return (gallery, uiLabelsConfig["extension_name"], staticConfig["extension_id"]),
+  return (gallery, uiLabelsConfig["extension_name"], staticConfig["extensionId"]),
 
 def setup_options():
-  section = (staticConfig["extension_id"], uiLabelsConfig["extension_name"])
+  section = (staticConfig["extensionId"], uiLabelsConfig["extension_name"])
 
   for key in defaultConfigurableConfig.keys():
     opts.add_option(getConfigFieldId(staticConfig, key), OptionInfo(*defaultConfigurableConfig[key], section = section))
