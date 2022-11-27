@@ -1,69 +1,61 @@
-import { isEmpty, isNil } from 'lodash'
+import { debounce, isNil } from 'lodash'
+
 import { Config } from '../config'
-import { withEffect } from '../utils/fn'
+
 import { tabElementQueryString } from '../utils/str'
+import { withEffect } from '../utils/fn'
 import { Nullable } from '../utils/types'
+
+import { isNotNil } from './guards'
 import { extractGridDimensions, updateGridCssVariables } from './grid'
-import { extractImageSrcs, insertImagesIntoButtons, makeUpdateImages, makeChangeImagesVisiblity, MakeUpdateImagesReturnValue } from './images'
+import { makeImageLoadListener, makeImageSourcesObserver } from './listeners'
+import { extractImageSrcs, insertImagesIntoButtons, makeUpdateImages, makeChangeImagesVisiblity, makePreloadImages } from './images'
 
 type TabElements = Readonly<{
-  imageSrcs: Element
+  imageSrcs: {
+    prev: Element[]
+    main: Element
+    next: Element[]
+  }
   buttons: Element[]
 }>
 
 const getElements = (config: Config, tabRoot: Element): Nullable<TabElements> => {
-  const imageSrcs = tabRoot.querySelector(tabElementQueryString(config, 'imgSrcs'))?.querySelector('.output-html')
+  const placeholder = null
+  const imageSrcsAcc: TabElements['imageSrcs'] = {
+    next: [],
+    main: placeholder as unknown as Element,
+    prev: []
+  }
+
   const buttons = Array.from(tabRoot.querySelectorAll(tabElementQueryString(config, 'imgButton')))
+  const imageSrcs = Array.from(tabRoot.querySelectorAll(tabElementQueryString(config, 'imgSrcs')))
+    .map((container) => container.querySelector('.output-html'))
+    .filter(isNotNil)
+    .reduce((acc, container) => {
+      const containerId = container.id
 
-  return isNil(imageSrcs) ? null : { imageSrcs, buttons }
-}
-
-const makeImageSourcesObserver = (callback: (node: Element) => void): MutationCallback => (mutation) => {
-  if (isEmpty(mutation)) {
-    return
-  }
-
-  const [{ target }] = mutation
-
-  if (!isNil(target) && target instanceof Element) {
-    callback(target)
-  }
-}
-
-type MakeImagesLoadListenerArg = Readonly<{
-  imagesPerPage: number
-  onDone: () => void
-  onReset: () => void
-}>
-
-type MakeImagesLoadListenerReturnValue = Readonly<{
-  reset: () => void
-  listen: () => void
-}>
-
-const makeImageLoadListener = ({
-  imagesPerPage,
-  onDone,
-  onReset
-}: MakeImagesLoadListenerArg): MakeImagesLoadListenerReturnValue => {
-  let progress = imagesPerPage
-
-  return {
-    reset: () => {
-      onReset()
-      progress = imagesPerPage
-    },
-    listen: () => {
-      progress = Math.max(0, progress - 1)
-
-      if (progress === 0) {
-        onDone()
+      if (containerId.includes('0')) {
+        acc.main = container
       }
-    }
+
+      if (/-\d+/.test(containerId)) {
+        acc.prev.push(container)
+      } else {
+        acc.next.push(container)
+      }
+
+      return acc
+    }, imageSrcsAcc)
+
+  if (imageSrcs.main === placeholder) {
+    return null
   }
+
+  return { buttons, imageSrcs }
 }
 
-export const makeInitTab = (config: Config) => (tabRoot: Element): void => {
+export const makeInitTab = (config: Config, preloadRoot: Element) => (tabRoot: Element): void => {
   const elements = getElements(config, tabRoot)
 
   if (isNil(elements)) {
@@ -73,27 +65,29 @@ export const makeInitTab = (config: Config) => (tabRoot: Element): void => {
   const gridDimensions = withEffect(extractGridDimensions(elements?.buttons ?? []), updateGridCssVariables)
   const imagesPerPage = gridDimensions.columns * gridDimensions.rows
 
-  const images = insertImagesIntoButtons(extractImageSrcs(elements.imageSrcs), elements.buttons)
+  const images = insertImagesIntoButtons(extractImageSrcs(elements.imageSrcs.main), elements.buttons)
+  const preloadImages = makePreloadImages()
   const hideImages = makeChangeImagesVisiblity(false, images)
   const showImages = makeChangeImagesVisiblity(true, images)
 
-  const { reset, listen: aggregatedLoadListener } = makeImageLoadListener({
+  const { reset: resetLoadingPrevPage, listen: aggregatedLoadListener } = makeImageLoadListener({
     imagesPerPage,
     onDone: showImages,
     onReset: hideImages
   })
+  const updateImages = makeUpdateImages(aggregatedLoadListener)
 
-  let shouldCancelPrevRef: MakeUpdateImagesReturnValue['shouldCancel'] = { current: false }
+  new MutationObserver(makeImageSourcesObserver(debounce((element) => {
+    console.log(element)
+    resetLoadingPrevPage()
+    void updateImages(extractImageSrcs(element), images)
+  }, config.debounceMs))).observe(elements.imageSrcs.main, { childList: true });
 
-  const observer = new MutationObserver(makeImageSourcesObserver((element) => {
-    shouldCancelPrevRef.current = true
+  [...elements.imageSrcs.prev, ...elements.imageSrcs.next].forEach((imageSrcNode) => {
+    preloadImages(preloadRoot, extractImageSrcs(imageSrcNode))
 
-    const { shouldCancel, updateImages } = makeUpdateImages(aggregatedLoadListener)
-    shouldCancelPrevRef = shouldCancel
-
-    reset()
-    updateImages(extractImageSrcs(element), images)
-  }))
-
-  observer.observe(elements.imageSrcs, { childList: true })
+    new MutationObserver(makeImageSourcesObserver(debounce((element) => {
+      preloadImages(preloadRoot, extractImageSrcs(element))
+    }, config.debounceMs))).observe(imageSrcNode, { childList: true })
+  })
 }

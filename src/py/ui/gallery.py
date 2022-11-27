@@ -12,29 +12,44 @@ class Gallery(TypedDict):
   nextPage: gradio.Button
   lastPage: gradio.Button
   gallery: gradio.Box
-  buttons: List[List[gradio.Box]]
-  hiddenImagesSrcContainer: gradio.HTML
+  buttons: List[List[gradio.Button]]
+  hiddenImagesSrcContainers: List[gradio.HTML]
 
 ImageClickHandler = Callable[[int, int], None]
 
-def makeCreateButton(tabConfig: TabConfig, imageClickHandler: ImageClickHandler) :
+def makeCreateButton(tabConfig: TabConfig, imageClickHandler: ImageClickHandler):
   suffixes = tabConfig["staticConfig"]["suffixes"]
 
   def createButton(column: int, row: int,):
-    button = gradio.Box(value = "", elem_id = getTabElementId(withPrefix(f'{column}_{row}', suffixes["imgButton"]), tabConfig))
-    # button.click(lambda x = column, y = row: imageClickHandler(x, y))
+    button = gradio.Button(value = "", elem_id = getTabElementId(withPrefix(f'{column}_{row}', suffixes["imgButton"]), tabConfig))
+    button.click(lambda x = column, y = row: imageClickHandler(x, y))
 
     return button
 
   return createButton
 
-def createGallery(tabConfig: TabConfig, initialImagesSrcs: str, imageClickHandler: ImageClickHandler) -> Gallery:
+GetImagesPage = Callable[[int], str]
+
+def createSrcContainers(tabConfig: TabConfig, getImagesPage: GetImagesPage) -> List[gradio.HTML]:
+  preloadPagesAmount = tabConfig["runtimeConfig"]["preloadPages"]
+  suffixes = tabConfig["staticConfig"]["suffixes"]
+
+  return [
+    gradio.HTML(
+        elem_id = getTabElementId(withPrefix(f'{pageIndex}', suffixes["imgSrcs"]), tabConfig),
+        value = getImagesPage(pageIndex), visible = False)
+    for
+      pageIndex
+    in range(0 - preloadPagesAmount, preloadPagesAmount + 1)
+  ]
+
+def createGallery(tabConfig: TabConfig, getImagesPage: GetImagesPage, imageClickHandler: ImageClickHandler) -> Gallery:
   staticConfig = tabConfig["staticConfig"]
   suffixes = staticConfig["suffixes"]
   createButton = makeCreateButton(tabConfig, imageClickHandler)
 
   with gradio.Column(scale = 2):
-    hiddenImagesSrcContainer = gradio.HTML(elem_id = getTabElementId(suffixes["imgSrcs"], tabConfig), value = initialImagesSrcs, visible = False)
+    hiddenImagesSrcContainers = createSrcContainers(tabConfig, getImagesPage)
 
     with gradio.Row():
       firstPage = gradio.Button('First Page')
@@ -64,5 +79,5 @@ def createGallery(tabConfig: TabConfig, initialImagesSrcs: str, imageClickHandle
     "lastPage": lastPage,
     "gallery": gallery,
     "buttons": buttons,
-    "hiddenImagesSrcContainer": hiddenImagesSrcContainer,
+    "hiddenImagesSrcContainers": hiddenImagesSrcContainers,
   }

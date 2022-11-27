@@ -13,6 +13,7 @@ class RuntimeConfig(TypedDict):
   root: str
   tabs: str
   maxTabsSizes: str
+  preloadPages: int
 
 class ConfigurableConfig(TypedDict):
   pageColumns: ConfigField[int]
@@ -20,13 +21,16 @@ class ConfigurableConfig(TypedDict):
   root: ConfigField[str]
   tabs: ConfigField[str]
   maxTabsSizes: ConfigField[str]
+  preloadPages: ConfigField[int]
 
 defaultConfigurableConfig: ConfigurableConfig = {
+  "root": ("outputs", "Root gallery directory (directories for custom tabs will be created in it)"),
   "pageColumns": (6, "Columns per gallery page"),
   "pageRows": (6, "Rows per gallery page"),
-  "root": ("outputs", "Root gallery directory (directories for custom tabs will be created in it)"),
+  "preloadPages": (2, "Amount of pages to preload in both directions"),
   "tabs": ("trash", "Custom tabs in the gallery"),
-  "maxTabsSizes": ("trash:20", "Max amount of images to store in a tab (if not specified, then no limit)")
+  "maxTabsSizes": ("trash:20", "Max amount of images to store in a tab (if not specified, then no limit)"),
+
 }
 
 class IdSuffixesConfigs(TypedDict):

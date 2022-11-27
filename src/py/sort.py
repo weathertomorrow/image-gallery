@@ -1,3 +1,4 @@
+from os import DirEntry
 from enum import Enum
 
 class SortOrder(Enum):
@@ -18,3 +19,10 @@ def getSortBy(radioOptValue: str) -> SortBy:
 
 def getSortParam(sortOrderRadioOptValue: str, sortByRadioOptValue) -> tuple[SortOrder, SortBy]:
   return (getSortOrder(sortOrderRadioOptValue), getSortBy(sortByRadioOptValue))
+
+def makeSortFiles(sortBy: SortBy):
+  def sort(image: DirEntry[str]):
+    if sortBy == SortBy.DATE:
+        return image.stat().st_mtime
+    return image.name
+  return sort

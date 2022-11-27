@@ -1,24 +1,20 @@
-import { isNil, nth } from 'lodash'
-import { Nullable } from '../utils/types'
+import { isNil, negate, nth } from 'lodash'
+import { isEmpty } from './guards'
 
 export const extractImageSrcs = (element: Element): string[] => {
-  return element.innerHTML.split('\n').map((src) => `file=${src}`)
+  return element.innerHTML.split('\n').filter(negate(isEmpty)).map((src) => `file=${src}`)
 }
 
-type ImagesElements = Array<Nullable<HTMLImageElement>>
+type ImagesElements = HTMLImageElement[]
 
 export const insertImagesIntoButtons = (imagesSources: string[], buttons: Element[]): ImagesElements => {
   return buttons.map((button, index) => {
     button.innerHTML = ''
-
-    const imageTag = document.createElement('img')
     const imageSrc = nth(imagesSources, index)
 
-    if (isNil(imageSrc)) {
-      return null
-    }
+    const imageTag = document.createElement('img')
+    imageTag.src = imageSrc ?? ''
 
-    imageTag.src = imageSrc
     button.appendChild(imageTag)
 
     return imageTag
@@ -33,32 +29,46 @@ export const makeChangeImagesVisiblity = (shouldBeVisible: boolean, images: Imag
   })
 }
 
-export type MakeUpdateImagesReturnValue = Readonly<{
-  shouldCancel: { current: boolean }
-  updateImages: (newImagesSources: string[], images: ImagesElements) => Promise<boolean>
-}>
+export const makeUpdateImages = (
+  listener: (imageIndex: number) => void
+) => async (newImagesSources: string[], images: ImagesElements) => {
+  if (isEmpty(newImagesSources)) {
+    return false
+  }
 
-export const makeUpdateImages = (listener: (imageIndex: number) => void): MakeUpdateImagesReturnValue => {
-  const shouldCancel = { current: false }
+  images.forEach((image, i) => {
+    const source = newImagesSources[i]
 
-  return {
-    shouldCancel,
-    updateImages: async (newImagesSources, images) => {
-      // for loop instead of a foreach so that it can be cancelled early when user is changing pages quickly
-      for (let i = 0; i < images.length; i++) {
-        if (shouldCancel.current) return false
+    if (!isNil(source)) {
+      image.src = source
+      image.onload = () => listener(i)
+    } else {
+      image.src = 'about:blank'
+      listener(i)
+    }
+  })
 
-        const image = images[i]
-        const source = newImagesSources[i]
+  return true
+}
 
-        if (!isNil(image) && !isNil(newImagesSources)) {
-          image.src = source
+type PreloadImages = (root: Element, imageSrcs: string[]) => void
 
-          image.onload = () => listener(i)
-        }
+export const makePreloadImages = (): PreloadImages => {
+  const alreadyPreloaded = new Map<string, null>()
+
+  return (root: Element, imageSrcs: string[]): void => {
+    imageSrcs.forEach((imageSrc) => {
+      if (alreadyPreloaded.has(imageSrc)) {
+        return
       }
 
-      return true
-    }
+      alreadyPreloaded.set(imageSrc, null)
+      const imageTag = document.createElement('img')
+
+      imageTag.src = imageSrc
+      imageTag.hidden = true
+
+      root.appendChild(imageTag)
+    })
   }
 }

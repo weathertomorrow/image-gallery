@@ -4,6 +4,9 @@ import { tabElementQueryString } from './utils/str'
 
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
+    const preloadRoot = document.createElement('div')
+    document.body.appendChild(preloadRoot)
+
     const root = document.body
       .querySelector(config.gradioAppTag)
       ?.shadowRoot
@@ -11,6 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     root
       ?.querySelectorAll(tabElementQueryString(config, 'galleryTab'))
-      .forEach(makeInitTab(config))
+      .forEach(makeInitTab(config, preloadRoot))
   }, 1000)
 })
