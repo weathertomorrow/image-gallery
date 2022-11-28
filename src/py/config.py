@@ -1,8 +1,16 @@
 from typing import TypedDict, TypeVar, Union, List
+from enum import Enum
 
 from modules.paths import script_path
 from modules.shared import opts
-from src.py.sort import SortOrder, SortBy
+
+class SortOrder(Enum):
+  DESC = 'desc'
+  ASC = 'asc'
+
+class SortBy(Enum):
+  DATE = 'date'
+  FILENAME = 'filename'
 
 ConfigFieldDefaultValue = TypeVar('ConfigFieldDefaultValue')
 ConfigField = tuple[ConfigFieldDefaultValue, str]
@@ -30,7 +38,6 @@ defaultConfigurableConfig: ConfigurableConfig = {
   "preloadPages": (2, "Amount of pages to preload in both directions"),
   "tabs": ("trash", "Custom tabs in the gallery"),
   "maxTabsSizes": ("trash:20", "Max amount of images to store in a tab (if not specified, then no limit)"),
-
 }
 
 class IdSuffixesConfigs(TypedDict):
@@ -40,6 +47,7 @@ class IdSuffixesConfigs(TypedDict):
   imgSrcs: str
   imgButton: str
   moveToButton: str
+  hiddenRefreshButton: str
 
 class TabDefaults(TypedDict):
   pageIndex: int
@@ -66,6 +74,7 @@ staticConfig: StaticConfig = {
     "imgSrcs": "imgSrcs",
     "imgButton": "imgButton",
     "moveToButton": "moveToButton",
+    "hiddenRefreshButton": "hiddenRefreshButton",
   },
   "tabDefaults": {
     "pageIndex": 0,

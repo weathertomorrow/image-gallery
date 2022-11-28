@@ -1,10 +1,10 @@
 import gradio
 from typing import TypedDict, List, Callable
 
-from src.py.sort import SortBy, SortOrder
+from src.py.config import TabConfig, SortBy, SortOrder
+
 from src.py.utils.tabs import getTabElementId
 from src.py.utils.str import withPrefix
-from src.py.config import TabConfig
 
 class Navigation(TypedDict):
   firstPage: gradio.Button
@@ -18,13 +18,19 @@ class Sort(TypedDict):
   order: gradio.Radio
   searchBox: gradio.Textbox
 
+class HiddenElements(TypedDict):
+  imagesSrcContainers: List[gradio.HTML]
+  selectedImage: gradio.Image
+  refreshButton: gradio.Button #for refreshing files due to interaction outside of the tab
+  refreshCounter: gradio.Number #for refreshing files due to interaction inside of the tab
+
 class Gallery(TypedDict):
   navigation: Navigation
   sort: Sort
   gallery: gradio.Box
   buttons: List[List[gradio.Button]]
-  hiddenImagesSrcContainers: List[gradio.HTML]
-  hiddenSelectedImage: gradio.Image
+  hidden: HiddenElements
+
 
 def makeCreateButton(tabConfig: TabConfig):
   suffixes = tabConfig["staticConfig"]["suffixes"]
@@ -61,6 +67,8 @@ def createGallery(arg: CreateGalleryArg) -> Gallery:
   with gradio.Column(scale = 2):
     hiddenImagesSrcContainers = createSrcContainers(tabConfig, arg["getImagesPage"])
     hiddenSelectedImage = gradio.Image(visible = False, type = "pil")
+    hiddenRefreshButton = gradio.Button(visible = False, elem_id = getTabElementId(tabConfig["staticConfig"]["suffixes"]["hiddenRefreshButton"], tabConfig))
+    hiddenRefreshCounter = gradio.Number(visible = False, value = 0)
 
     createButton = makeCreateButton(tabConfig)
 
@@ -99,8 +107,12 @@ def createGallery(arg: CreateGalleryArg) -> Gallery:
     },
     "gallery": gallery,
     "buttons": buttons,
-    "hiddenImagesSrcContainers": hiddenImagesSrcContainers,
-    "hiddenSelectedImage": hiddenSelectedImage,
+    "hidden": {
+      "imagesSrcContainers": hiddenImagesSrcContainers,
+      "selectedImage": hiddenSelectedImage,
+      "refreshButton": hiddenRefreshButton,
+      "refreshCounter": hiddenRefreshCounter,
+    },
     "sort": {
       "by": sortBy,
       "order": sortOrder,

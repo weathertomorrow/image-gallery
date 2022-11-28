@@ -1,39 +1,16 @@
 import gradio
-from os import stat, path
+from os import stat
 from shutil import move
-from modules.script_callbacks import ImageSaveParams
-
 from typing import Callable, Union, TypedDict, List, cast
 from time import strftime, localtime
 
 from modules.extras import run_pnginfo
 
+from src.py.config import TabConfig, SingleTabConfig
+
 from src.py.ui.gallery import Gallery
 from src.py.ui.sidePanel import SidePanel
-from src.py.config import TabConfig, SingleTabConfig
-from src.py.images import dataIntoImags
-
-OnNewImage = Callable[[ImageSaveParams], None]
-ImageCreationListener = Callable[[ImageSaveParams], None]
-
-def makeImageCreationListener(tabConfig: TabConfig, onNewImage: OnNewImage) -> ImageCreationListener:
-  def imageCreationListener(image: ImageSaveParams):
-    commonPath = path.commonpath([tabConfig['path'], image.filename])
-    print(tabConfig['id'], commonPath)
-
-    if not commonPath:
-      return
-
-    if path.samefile(commonPath, tabConfig['path']):
-        onNewImage(image)
-
-  return imageCreationListener
-
-def makeOnNewImage(gallery: Gallery) -> OnNewImage:
-  def onNewImage(image: ImageSaveParams):
-    gallery['navigation']['pageIndex'].
-
-  return onNewImage
+from src.py.logic.images import dataIntoImags
 
 def formatImageTime(time: float) -> str:
   return "<div style='color:#999' align='right'>" + strftime("%Y-%m-%d %H:%M:%S", localtime(time)) + "</div>"
@@ -57,14 +34,15 @@ def deselectImage():
   return None
 
 def makeMoveImage(targetTab: SingleTabConfig):
-  def moveImage(image: str):
+  # these are here because files need to be refreshed afterwards
+  def moveImage(sortOrder: str, sortBy: str, image: str, counter: float):
     move(image, targetTab['path'])
+    return (None, 0 if int(counter) == 1 else 1)
 
   return moveImage
 
-
-AllGradioInputs = Union[gradio.Textbox, gradio.HTML, gradio.Number, gradio.Image, gradio.Radio]
-AllGradioOutputs = Union[gradio.Textbox, gradio.HTML, gradio.Number, gradio.Image, gradio.Radio, gradio.Column]
+AllGradioInputs = Union[gradio.Textbox, gradio.HTML, gradio.Number, gradio.Image, gradio.Radio, gradio.Button]
+AllGradioOutputs = Union[gradio.Textbox, gradio.HTML, gradio.Number, gradio.Image, gradio.Radio, gradio.Column, gradio.Button]
 
 class InputOutputPair(TypedDict):
   inputs: Union[None, List[AllGradioInputs]]
@@ -80,6 +58,8 @@ class InputOutputPairs(TypedDict):
   deselectButton: InputOutputPair
   selectedImage: InputOutputPair
   moveToTabButton: InputOutputPair
+  hiddenRefreshButton: InputOutputPair
+  hiddenRefreshCounter: InputOutputPair
 
 class UNSAFE_UntypedInputOutputPairs(TypedDict):
   navigation: UNSAFE_InputOutputPair
@@ -87,32 +67,46 @@ class UNSAFE_UntypedInputOutputPairs(TypedDict):
   deselectButton: UNSAFE_InputOutputPair
   selectedImage: UNSAFE_InputOutputPair
   moveToTabButton: UNSAFE_InputOutputPair
+  hiddenRefreshButton: UNSAFE_InputOutputPair
+  hiddenRefreshCounter: UNSAFE_InputOutputPair
 
-# untyped because idk how to get the base "Component" type that gradio wants (doesnt seem to be exposed by gradio)
+# untyped because not sure how to get the base "Component" type that gradio wants (doesnt seem to be exposed by gradio)
 def getEventInputsAndOutputs(gallery: Gallery, sidePanel: SidePanel) -> UNSAFE_UntypedInputOutputPairs:
+  sortArgOrder = (gallery['sort']['order'], gallery['sort']['by'])
+
   navigation: InputOutputPair = {
-    "inputs": [gallery['navigation']['pageIndex'], gallery['sort']['order'], gallery['sort']['by']],
-    "outputs": [gallery['navigation']['pageIndex'], gallery['sort']['order'], gallery['sort']['by'], *gallery['hiddenImagesSrcContainers']]
+    "inputs": [*sortArgOrder, gallery['navigation']['pageIndex']],
+    "outputs": [gallery['navigation']['pageIndex'], *sortArgOrder, *gallery['hidden']['imagesSrcContainers']]
+  }
+
+  hiddenRefreshButton: InputOutputPair = {
+    "inputs": [*sortArgOrder, gallery['navigation']['pageIndex']],
+    "outputs": [gallery['navigation']['pageIndex'], *sortArgOrder, *gallery['hidden']['imagesSrcContainers']]
+  }
+
+  hiddenRefreshCounter: InputOutputPair = {
+    "inputs": [*sortArgOrder, gallery['navigation']['pageIndex'], gallery['hidden']['refreshCounter']],
+    "outputs": [gallery['navigation']['pageIndex'], *sortArgOrder, gallery['hidden']['refreshCounter'], *gallery['hidden']['imagesSrcContainers']]
+  }
+
+  moveToTab: InputOutputPair = {
+    "inputs": [*sortArgOrder, sidePanel['image']['name'], gallery['hidden']['refreshCounter']],
+    "outputs": [gallery['hidden']['selectedImage'], gallery['hidden']['refreshCounter']]
   }
 
   selectedImage: InputOutputPair = {
-    "inputs": [gallery['hiddenSelectedImage']],
+    "inputs": [gallery['hidden']['selectedImage']],
     "outputs": [sidePanel['image']['prompts'], sidePanel['container']]
   }
 
   deselectButton: InputOutputPair = {
     "inputs": None,
-    "outputs": [gallery['hiddenSelectedImage']]
+    "outputs": [gallery['hidden']['selectedImage']]
   }
 
   imageButton: InputOutputPair = {
-    "inputs": [gallery['hiddenImagesSrcContainers'][len(gallery['hiddenImagesSrcContainers']) // 2]],
-    "outputs":[gallery['hiddenSelectedImage'], sidePanel['image']['name'], sidePanel['image']['creationTime']]
-  }
-
-  moveToTab: InputOutputPair = {
-    "inputs": [sidePanel['image']['name']],
-    "outputs": None
+    "inputs": [gallery['hidden']['imagesSrcContainers'][len(gallery['hidden']['imagesSrcContainers']) // 2]],
+    "outputs":[gallery['hidden']['selectedImage'], sidePanel['image']['name'], sidePanel['image']['creationTime']]
   }
 
   returnValue: InputOutputPairs = {
@@ -121,6 +115,8 @@ def getEventInputsAndOutputs(gallery: Gallery, sidePanel: SidePanel) -> UNSAFE_U
     "deselectButton": deselectButton,
     "imageButton": imageButton,
     "moveToTabButton": moveToTab,
+    "hiddenRefreshButton": hiddenRefreshButton,
+    "hiddenRefreshCounter": hiddenRefreshCounter
   }
 
   return cast(UNSAFE_UntypedInputOutputPairs, returnValue)

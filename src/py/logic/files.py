@@ -1,5 +1,7 @@
 from os import makedirs, path, DirEntry, scandir
-from typing import Union, TypedDict
+from typing import Union
+
+from src.py.logic.types import ImagesInDir
 
 from src.py.config import StaticConfig
 
@@ -18,7 +20,6 @@ def isImage(staticConfig: StaticConfig, file: DirEntry[str]) -> bool:
 def getImageFullPath(staticConfig: StaticConfig, filePath: str) -> str:
   return path.join(staticConfig["scriptPath"], filePath)
 
-ImagesInDir = list[DirEntry[str]]
 def getImagesInDir(staticConfig: StaticConfig, dirPath: str) -> ImagesInDir:
   with scandir(dirPath) as directory:
     images = []

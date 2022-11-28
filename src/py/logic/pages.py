@@ -1,26 +1,16 @@
-from typing import Callable, TypedDict
-from src.py.images import GetImages, PostProcess
+from math import ceil
 
-from src.py.sort import getSortParam
+from src.py.logic.types import PageChangingFN, PageChangingFNConfig
+from src.py.logic.sort import getSortParam
 
-PageChangingFNOutput = tuple[
-  int, # current page index
-  str, # sort order
-  str, # sort by,
-  str, # images' sources after postprocessing for each page
-]
+def getPageOffsets(pagesToPreload: int) -> list[int]:
+  return list(range(0 - pagesToPreload, pagesToPreload + 1))
 
-PageChangingFN = Callable[[int, str, str], PageChangingFNOutput]
-
-class PageChangingFNConfig(TypedDict):
-  getImages: GetImages
-  postProcess: PostProcess
-  pageOffsets: list[int]
-  totalPages: int
-  imagesPerPage: int
+def getTotalPages(config: PageChangingFNConfig) -> int:
+  return ceil(len(config['imagesInDirRef']['images']) / config["imagesPerPage"])
 
 def getLastPageIndex(config: PageChangingFNConfig) -> int:
-  return config["totalPages"] - 1
+  return getTotalPages(config) - 1
 
 def getEmptyPages(config: PageChangingFNConfig) -> list[str]:
   return list(map(lambda x: '', config["pageOffsets"]))
@@ -38,7 +28,8 @@ def indexInRange(config: PageChangingFNConfig, index: int) -> int:
   return min(max(index, 0), getLastPageIndex(config))
 
 def makeChangePage(config: PageChangingFNConfig, offset: int) -> PageChangingFN:
-  def handle(unparsedIndex: int, *sort: str):
+  def handle(sortOrder: str, sortBy: str, unparsedIndex: int):
+    sort = (sortOrder, sortBy)
     index = indexInRange(config, unparsedIndex + offset)
 
     if (index == unparsedIndex):
@@ -48,7 +39,8 @@ def makeChangePage(config: PageChangingFNConfig, offset: int) -> PageChangingFN:
   return handle
 
 def makeGoToFirstPage(config: PageChangingFNConfig) -> PageChangingFN:
-  def handle(unparsedIndex: int, *sort: str):
+  def handle(sortOrder: str, sortBy: str, unparsedIndex: int):
+    sort = (sortOrder, sortBy)
     index = indexInRange(config, unparsedIndex)
 
     if index == 0:
@@ -58,7 +50,8 @@ def makeGoToFirstPage(config: PageChangingFNConfig) -> PageChangingFN:
   return handle
 
 def makeGoToLastPage(config: PageChangingFNConfig) -> PageChangingFN:
-  def handle(unparsedIndex: int, *sort: str):
+  def handle(sortOrder: str, sortBy: str, unparsedIndex: int):
+    sort = (sortOrder, sortBy)
     index = indexInRange(config, unparsedIndex)
     lastPageIndex = getLastPageIndex(config)
 
@@ -68,10 +61,18 @@ def makeGoToLastPage(config: PageChangingFNConfig) -> PageChangingFN:
 
   return handle
 
-def makeGoToPageWithAtIndex(config: PageChangingFNConfig) -> PageChangingFN:
-  def handle(unparsedIndex: int, *sort: str):
-    print(unparsedIndex)
+def makeGoToPageAtIndex(config: PageChangingFNConfig) -> PageChangingFN:
+  def handle(sortOrder: str, sortBy: str, unparsedIndex: int):
+    sort = (sortOrder, sortBy)
     index = indexInRange(config, unparsedIndex)
+
     return (index, *sort, *getPages(config, index, *sort))
+
+  return handle
+
+def makeRefreshPageForCounter(config: PageChangingFNConfig):
+  def handle(sortOrder: str, sortBy: str, unparsedIndex: int, counter: float):
+    (index, sortOrder, sortBy, *pages) = makeGoToPageAtIndex(config)(sortOrder, sortBy, unparsedIndex)
+    return (index, sortOrder, sortBy, counter, *pages)
 
   return handle
