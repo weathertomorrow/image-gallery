@@ -1,49 +1,17 @@
 import gradio
 from math import ceil
-from os import stat, path
-from shutil import move
 
-from typing import Callable, Union
-from time import strftime, localtime
 
-from modules.extras import run_pnginfo
-
-from src.py.config import TabConfig, SingleTabConfig
+from src.py.config import TabConfig
 from src.py.utils.tabs import getTabElementId
 from src.py.files import makeDirIfMissing, getImagesInDir
 
 from src.py.ui.gallery import createGallery
 from src.py.ui.sidePanel import createSidePanel
 
-from src.py.images import makeGetImages, getImagesPerPage, imagesIntoData, dataIntoImags
+from src.py.images import makeGetImages, getImagesPerPage, imagesIntoData
 from src.py.pages import makeChangePage, makeGoToLastPage, makeGoToFirstPage, makeGoToPageWithAtIndex, PageChangingFNConfig
-
-def formatImageTime(time: float) -> str:
-  return "<div style='color:#999' align='right'>" + strftime("%Y-%m-%d %H:%M:%S", localtime(time)) + "</div>"
-
-ButtonClickHandler = Callable[[str, int, int], tuple]
-def makeButtonClickHandler(tabConfig: TabConfig) -> ButtonClickHandler:
-  def buttonClickHandler(imagesInHtml: str, x: int, y: int):
-    image = dataIntoImags(imagesInHtml)[y * tabConfig['runtimeConfig']['pageColumns'] + x]
-    return (image, image, formatImageTime(stat(image).st_ctime))
-
-  return buttonClickHandler
-
-def imageChangeHandler(image: Union[gradio.Pil, None]):
-  if image is None:
-    return ("", gradio.update(visible = False))
-
-  imageInfo = run_pnginfo(image)
-  return (imageInfo[1], gradio.update(visible = True))
-
-def deselectImage():
-  return None
-
-def makeMoveImage(targetTab: SingleTabConfig):
-  def moveImage(image: str):
-    move(image, targetTab['path'])
-
-  return moveImage
+from src.py.eventHandlers import makeButtonClickHandler, imageChangeHandler, makeMoveImage, deselectImage, getEventInputsAndOutputs
 
 def createTab(tabConfig: TabConfig):
   makeDirIfMissing(tabConfig['path'])
@@ -55,7 +23,6 @@ def createTab(tabConfig: TabConfig):
   allImagesInDir = getImagesInDir(staticConfig, tabConfig['path'])
   getImages = makeGetImages(tabConfig, allImagesInDir)
   imagesPerPage = getImagesPerPage(tabConfig)
-  buttonClickHandler = makeButtonClickHandler(tabConfig)
 
   with gradio.Tab(label = tabConfig["displayName"], elem_id = getTabElementId(staticConfig['suffixes']['galleryTab'], tabConfig)):
     with gradio.Row():
@@ -67,7 +34,7 @@ def createTab(tabConfig: TabConfig):
           })
           sidePanel = createSidePanel(tabConfig)
 
-
+  inputsAndOutputs = getEventInputsAndOutputs(gallery, sidePanel)
   changePageConfig: PageChangingFNConfig = {
     'getImages': getImages,
     'postProcess': imagesIntoData,
@@ -76,30 +43,20 @@ def createTab(tabConfig: TabConfig):
     "totalPages": ceil(len(allImagesInDir) / imagesPerPage),
   }
 
-  galleryNavigationInputs = [gallery['navigation']['pageIndex'], gallery['sort']['order'], gallery['sort']['by']]
-  galleryNavigationOutputs = [gallery['navigation']['pageIndex'], gallery['sort']['order'], gallery['sort']['by'], *gallery['hiddenImagesSrcContainers']]
-
-  imageButtonInputs = [gallery['hiddenImagesSrcContainers'][len(gallery['hiddenImagesSrcContainers']) // 2]]
-  imageButtonOutputs = [gallery['hiddenSelectedImage'], sidePanel['image']['name'], sidePanel['image']['creationTime']]
-
-  selectedImageInputs = [gallery['hiddenSelectedImage']]
-  selectedImageOutputs = [sidePanel['image']['prompts'], sidePanel['container']]
-
-  gallery['navigation']['nextPage'].click(makeChangePage(changePageConfig, 1), galleryNavigationInputs, galleryNavigationOutputs)
-  gallery['navigation']['prevPage'].click(makeChangePage(changePageConfig, -1), galleryNavigationInputs, galleryNavigationOutputs)
-  gallery['navigation']['firstPage'].click(makeGoToFirstPage(changePageConfig), galleryNavigationInputs, galleryNavigationOutputs)
-  gallery['navigation']['lastPage'].click(makeGoToLastPage(changePageConfig), galleryNavigationInputs, galleryNavigationOutputs)
-  gallery['navigation']['pageIndex'].change(makeGoToPageWithAtIndex(changePageConfig), galleryNavigationInputs, galleryNavigationOutputs)
-  gallery['sort']['by'].change(makeGoToFirstPage(changePageConfig), galleryNavigationInputs, galleryNavigationOutputs)
-  gallery['sort']['order'].change(makeGoToFirstPage(changePageConfig), galleryNavigationInputs, galleryNavigationOutputs)
+  gallery['navigation']['nextPage'].click(makeChangePage(changePageConfig, 1), **inputsAndOutputs['navigation'])
+  gallery['navigation']['prevPage'].click(makeChangePage(changePageConfig, -1), **inputsAndOutputs['navigation'])
+  gallery['navigation']['firstPage'].click(makeGoToFirstPage(changePageConfig), **inputsAndOutputs['navigation'])
+  gallery['navigation']['lastPage'].click(makeGoToLastPage(changePageConfig), **inputsAndOutputs['navigation'])
+  gallery['navigation']['pageIndex'].change(makeGoToPageWithAtIndex(changePageConfig), **inputsAndOutputs['navigation'])
+  gallery['sort']['by'].change(makeGoToFirstPage(changePageConfig), **inputsAndOutputs['navigation'])
+  gallery['sort']['order'].change(makeGoToFirstPage(changePageConfig), **inputsAndOutputs['navigation'])
 
   for (row, buttonRow) in enumerate(gallery['buttons']):
     for (column, button) in enumerate(buttonRow):
-      button.click(lambda htmlInput, x = column, y = row: buttonClickHandler(htmlInput, x, y), imageButtonInputs, imageButtonOutputs)
-  gallery['hiddenSelectedImage'].change(imageChangeHandler, selectedImageInputs, selectedImageOutputs)
-
+      button.click(makeButtonClickHandler(tabConfig, column, row), **inputsAndOutputs['imageButton'])
+  gallery['hiddenSelectedImage'].change(imageChangeHandler, **inputsAndOutputs['selectedImage'])
 
   for (otherTab, moveToOtherTabButton) in sidePanel['buttons']['moveTo']:
-    moveToOtherTabButton.click(makeMoveImage(otherTab), [sidePanel['image']['name']], None)
+    moveToOtherTabButton.click(makeMoveImage(otherTab), **inputsAndOutputs['moveToTabButton'])
 
-  sidePanel['buttons']['deselect'].click(deselectImage, None, [gallery['hiddenSelectedImage']])
+  sidePanel['buttons']['deselect'].click(deselectImage, **inputsAndOutputs['deselectButton'])
