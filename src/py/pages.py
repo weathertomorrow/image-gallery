@@ -70,6 +70,7 @@ def makeGoToLastPage(config: PageChangingFNConfig) -> PageChangingFN:
 
 def makeGoToPageWithAtIndex(config: PageChangingFNConfig) -> PageChangingFN:
   def handle(unparsedIndex: int, *sort: str):
+    print(unparsedIndex)
     index = indexInRange(config, unparsedIndex)
     return (index, *sort, *getPages(config, index, *sort))
 

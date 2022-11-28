@@ -1,6 +1,7 @@
 import gradio
-from os import stat
+from os import stat, path
 from shutil import move
+from modules.script_callbacks import ImageSaveParams
 
 from typing import Callable, Union, TypedDict, List, cast
 from time import strftime, localtime
@@ -12,18 +13,40 @@ from src.py.ui.sidePanel import SidePanel
 from src.py.config import TabConfig, SingleTabConfig
 from src.py.images import dataIntoImags
 
+OnNewImage = Callable[[ImageSaveParams], None]
+ImageCreationListener = Callable[[ImageSaveParams], None]
+
+def makeImageCreationListener(tabConfig: TabConfig, onNewImage: OnNewImage) -> ImageCreationListener:
+  def imageCreationListener(image: ImageSaveParams):
+    commonPath = path.commonpath([tabConfig['path'], image.filename])
+    print(tabConfig['id'], commonPath)
+
+    if not commonPath:
+      return
+
+    if path.samefile(commonPath, tabConfig['path']):
+        onNewImage(image)
+
+  return imageCreationListener
+
+def makeOnNewImage(gallery: Gallery) -> OnNewImage:
+  def onNewImage(image: ImageSaveParams):
+    gallery['navigation']['pageIndex'].
+
+  return onNewImage
+
 def formatImageTime(time: float) -> str:
   return "<div style='color:#999' align='right'>" + strftime("%Y-%m-%d %H:%M:%S", localtime(time)) + "</div>"
 
 ButtonClickHandler = Callable[[str], tuple]
-def makeButtonClickHandler(tabConfig: TabConfig, x: int, y: int) -> ButtonClickHandler:
-  def buttonClickHandler(imagesInHtml: str):
+def makeOnImageClick(tabConfig: TabConfig, x: int, y: int) -> ButtonClickHandler:
+  def onImageClick(imagesInHtml: str):
     image = dataIntoImags(imagesInHtml)[y * tabConfig['runtimeConfig']['pageColumns'] + x]
     return (image, image, formatImageTime(stat(image).st_ctime))
 
-  return buttonClickHandler
+  return onImageClick
 
-def imageChangeHandler(image: Union[gradio.Pil, None]):
+def onImageChange(image: Union[gradio.Pil, None]):
   if image is None:
     return ("", gradio.update(visible = False))
 

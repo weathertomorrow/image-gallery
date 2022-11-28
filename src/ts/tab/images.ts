@@ -10,12 +10,17 @@ type ImagesElements = HTMLImageElement[]
 export const insertImagesIntoButtons = (imagesSources: string[], buttons: Element[]): ImagesElements => {
   return buttons.map((button, index) => {
     button.innerHTML = ''
-    const imageSrc = nth(imagesSources, index)
 
+    const imageSrc = nth(imagesSources, index)
     const imageTag = document.createElement('img')
     imageTag.src = imageSrc ?? ''
 
     button.appendChild(imageTag)
+
+    if (isNil(imageSrc)) {
+      markImageAsPermanentlyHidden(imageTag)
+      changeImageVisiblity(false, imageTag)
+    }
 
     return imageTag
   })

@@ -1,7 +1,6 @@
 import gradio
 from math import ceil
 
-
 from src.py.config import TabConfig
 from src.py.utils.tabs import getTabElementId
 from src.py.files import makeDirIfMissing, getImagesInDir
@@ -11,9 +10,9 @@ from src.py.ui.sidePanel import createSidePanel
 
 from src.py.images import makeGetImages, getImagesPerPage, imagesIntoData
 from src.py.pages import makeChangePage, makeGoToLastPage, makeGoToFirstPage, makeGoToPageWithAtIndex, PageChangingFNConfig
-from src.py.eventHandlers import makeButtonClickHandler, imageChangeHandler, makeMoveImage, deselectImage, getEventInputsAndOutputs
+from src.py.eventHandlers import makeOnImageClick, onImageChange, makeMoveImage, deselectImage, getEventInputsAndOutputs, makeImageCreationListener, ImageCreationListener, makeOnNewImage
 
-def createTab(tabConfig: TabConfig):
+def createTab(tabConfig: TabConfig) -> ImageCreationListener:
   makeDirIfMissing(tabConfig['path'])
 
   staticConfig = tabConfig["staticConfig"]
@@ -53,10 +52,12 @@ def createTab(tabConfig: TabConfig):
 
   for (row, buttonRow) in enumerate(gallery['buttons']):
     for (column, button) in enumerate(buttonRow):
-      button.click(makeButtonClickHandler(tabConfig, column, row), **inputsAndOutputs['imageButton'])
-  gallery['hiddenSelectedImage'].change(imageChangeHandler, **inputsAndOutputs['selectedImage'])
+      button.click(makeOnImageClick(tabConfig, column, row), **inputsAndOutputs['imageButton'])
+  gallery['hiddenSelectedImage'].change(onImageChange, **inputsAndOutputs['selectedImage'])
 
   for (otherTab, moveToOtherTabButton) in sidePanel['buttons']['moveTo']:
     moveToOtherTabButton.click(makeMoveImage(otherTab), **inputsAndOutputs['moveToTabButton'])
 
   sidePanel['buttons']['deselect'].click(deselectImage, **inputsAndOutputs['deselectButton'])
+
+  return makeImageCreationListener(tabConfig, makeOnNewImage(gallery))

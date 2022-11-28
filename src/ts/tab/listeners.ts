@@ -7,7 +7,6 @@ export const makeImageSourcesObserver = (callback: (node: Element) => void): Mut
   }
 
   const [{ target }] = mutation
-  console.log(mutation)
 
   if (!isNil(target) && target instanceof Element) {
     callback(target)
@@ -39,7 +38,6 @@ export const makeImageLoadListener = ({
     },
     listen: () => {
       progress = Math.max(0, progress - 1)
-      console.log({ progress })
       if (progress === 0) {
         onDone()
       }

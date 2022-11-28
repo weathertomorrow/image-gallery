@@ -1,6 +1,6 @@
 import gradio
 
-from modules.script_callbacks import on_ui_settings, on_ui_tabs
+from modules.script_callbacks import on_ui_settings, on_ui_tabs, on_image_saved
 from modules.shared import opts, OptionInfo
 
 from src.py.config import defaultConfigurableConfig, staticConfig, uiLabelsConfig
@@ -16,13 +16,10 @@ def setup_tabs():
   # merge configs to avoid duplicates
   tabs = mergeTabConfigs(defaultTabConfigs, customTabConfigs)
 
-  for tab in tabs:
-    print(tab["path"])
-
   with gradio.Blocks(analytics_enabled = False) as gallery:
     with gradio.Tabs(elem_id = withSuffix(staticConfig["extensionId"], staticConfig["suffixes"]["extensionTab"])):
       for tab in tabs:
-        createTab(tab)
+        on_image_saved(createTab(tab))
 
   return (gallery, uiLabelsConfig["extension_name"], staticConfig["extensionId"]),
 
