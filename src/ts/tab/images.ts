@@ -5,8 +5,7 @@ export const extractImageSrcs = (element: Element): string[] => {
   return element.innerHTML.split('\n').filter(negate(isEmpty)).map((src) => `file=${src}`)
 }
 
-type ImagesElements = HTMLImageElement[]
-
+export type ImagesElements = HTMLImageElement[]
 export const insertImagesIntoButtons = (imagesSources: string[], buttons: Element[]): ImagesElements => {
   return buttons.map((button, index) => {
     button.innerHTML = ''
@@ -47,9 +46,10 @@ export const makeChangeImagesVisiblity = (shouldBeVisible: boolean, images: Imag
   images.forEach((image) => changeImageVisiblity(shouldBeVisible, image))
 }
 
+export type UpdateImages = (newImagesSources: string[], images: ImagesElements) => Promise<boolean>
 export const makeUpdateImages = (
   listener: (imageIndex: number) => void
-) => async (newImagesSources: string[], images: ImagesElements) => {
+): UpdateImages => async (newImagesSources, images) => {
   if (isEmpty(newImagesSources)) {
     return false
   }
@@ -70,8 +70,7 @@ export const makeUpdateImages = (
   return true
 }
 
-type PreloadImages = (root: Element, imageSrcs: string[]) => void
-
+export type PreloadImages = (root: Element, imageSrcs: string[]) => void
 export const makePreloadImages = (): PreloadImages => {
   const alreadyPreloaded = new Map<string, null>()
 

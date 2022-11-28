@@ -1,5 +1,7 @@
 import config from './config'
-import { makeInitTab } from './tab'
+import { initTab } from './tab'
+import { isNotNil } from './tab/guards'
+import { includeOtherTabConfigs, makeExpandConfig } from './utils/config'
 import { tabElementQueryString } from './utils/str'
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,10 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const root = document.body
       .querySelector(config.gradioAppTag)
       ?.shadowRoot
-      ?.querySelector(tabElementQueryString(config, 'extensionTab'))
 
-    root
-      ?.querySelectorAll(tabElementQueryString(config, 'galleryTab'))
-      .forEach(makeInitTab(config, preloadRoot))
+    Array.from(root
+      ?.querySelector(tabElementQueryString(config, 'extensionTab'))
+      ?.querySelectorAll(tabElementQueryString(config, 'galleryTab')) ?? []
+    )
+      .map(makeExpandConfig(config, preloadRoot, root))
+      .filter(isNotNil)
+      .map(includeOtherTabConfigs)
+      .forEach(initTab)
   }, 1000)
 })

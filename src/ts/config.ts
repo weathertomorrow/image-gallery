@@ -1,4 +1,4 @@
-const config = {
+const staticConfig = {
   gradioAppTag: 'gradio-app',
   extensionId: 'images_gallery',
   cssClassPrefix: 'image_gallery',
@@ -8,10 +8,25 @@ const config = {
     galleryTab: 'galleryTab',
     gallery: 'gallery',
     imgSrcs: 'imgSrcs',
-    imgButton: 'imgButton'
+    imgButton: 'imgButton',
+    moveToButton: 'moveToButton',
+    hiddenRefreshButton: 'hiddenRefreshButton',
+    progressBar: 'progressbar'
   }
 } as const
 
-export type Config = typeof config
+export type RuntimeConfig = Readonly<{
+  tabId: string
+  appRoot: ShadowRoot
+  tabRoot: Element
+  preloadRoot: Element
+}>
 
-export default config
+export type BaseTabConfig = StaticConfig & RuntimeConfig
+export type StaticConfig = typeof staticConfig
+
+export type TabConfig = BaseTabConfig & Readonly<{
+  otherTabs: BaseTabConfig[]
+}>
+
+export default staticConfig

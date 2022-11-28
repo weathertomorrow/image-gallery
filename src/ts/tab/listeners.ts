@@ -1,7 +1,7 @@
 import { isNil } from 'lodash'
 import { isEmpty } from './guards'
 
-export const makeImageSourcesObserver = (callback: (node: Element) => void): MutationCallback => (mutation) => {
+export const makeImageSourcesListener = (callback: (node: Element) => void): MutationCallback => (mutation) => {
   if (isEmpty(mutation)) {
     return
   }
@@ -10,6 +10,20 @@ export const makeImageSourcesObserver = (callback: (node: Element) => void): Mut
 
   if (!isNil(target) && target instanceof Element) {
     callback(target)
+  }
+}
+
+export const makeProgressBarListener = (isDone: (done: boolean) => void): MutationCallback => (mutation) => {
+  if (isEmpty(mutation)) {
+    return
+  }
+
+  const [{ target }] = mutation
+
+  if (!isNil(target) && target instanceof Element && isEmpty(Array.from(target.children))) {
+    isDone(true)
+  } else {
+    isDone(false)
   }
 }
 
@@ -43,4 +57,8 @@ export const makeImageLoadListener = ({
       }
     }
   }
+}
+
+export const makeHTMLEventListener = (listener: () => void, eventType: keyof HTMLElementEventMap = 'click') => (element: HTMLElement) => {
+  element.addEventListener(eventType, listener)
 }
