@@ -21,12 +21,25 @@ export const insertImagesIntoButtons = (imagesSources: string[], buttons: Elemen
   })
 }
 
+const markImageAsPermanentlyHidden = (image: HTMLImageElement): void => image.setAttribute('data-hidden', 'true')
+const markImageAsNormal = (image: HTMLImageElement): void => image.setAttribute('data-hidden', 'false')
+const shouldBePermanentlyHidden = (image: HTMLImageElement): boolean => image.getAttribute('data-hidden') === 'true'
+
+const changeImageVisiblity = (shouldBeVisible: boolean, image: HTMLImageElement): void => {
+  const parentElement = image.parentElement
+  if (isNil(parentElement)) return
+
+  if (shouldBePermanentlyHidden(image)) {
+    parentElement.style.display = 'none'
+  } else {
+    parentElement.style.display = 'inline-flex'
+  }
+
+  image.style.opacity = shouldBeVisible ? '1' : '0'
+}
+
 export const makeChangeImagesVisiblity = (shouldBeVisible: boolean, images: ImagesElements) => () => {
-  images.forEach((image) => {
-    if (!isNil(image)) {
-      image.style.opacity = shouldBeVisible ? '1' : '0'
-    }
-  })
+  images.forEach((image) => changeImageVisiblity(shouldBeVisible, image))
 }
 
 export const makeUpdateImages = (
@@ -40,10 +53,11 @@ export const makeUpdateImages = (
     const source = newImagesSources[i]
 
     if (!isNil(source)) {
+      markImageAsNormal(image)
       image.src = source
       image.onload = () => listener(i)
     } else {
-      image.src = 'about:blank'
+      markImageAsPermanentlyHidden(image)
       listener(i)
     }
   })

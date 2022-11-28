@@ -4,7 +4,7 @@ import os
 from typing import cast, List, Union, Callable
 from modules.shared import Options
 
-from src.py.config import RuntimeConfig, StaticConfig, ConfigurableConfig, TabConfig, BaseTabConfig, GlobalConfig
+from src.py.config import RuntimeConfig, StaticConfig, ConfigurableConfig, BaseTabConfig, GlobalConfig, SingleTabConfig, TabConfig
 
 from src.py.utils.int import strToNullableInt
 from src.py.utils.guards import isNotEmpty, isEmpty
@@ -48,16 +48,16 @@ def getTabLimits(config: RuntimeConfig) -> TabSizeLimits:
 
   return dict(map(getLimit, config["maxTabsSizes"].split(",")))
 
-PathGetter = Callable[[str], str]
+PathGetter = Callable[[str, str], str]
 
 def makeGetCustomTabPath(config: RuntimeConfig) -> PathGetter:
-  def getCustomTabPath(tabName: str) -> str:
-    return os.path.join(config["root"], tabName)
+  def getCustomTabPath(tabName: str, tabId: str) -> str:
+    return os.path.join(config["root"], tabId)
 
   return getCustomTabPath
 
 def makeGetBuiltinTabPath(config: StaticConfig) -> PathGetter:
-  def getBuiltinTabPath(tabName: str) -> str:
+  def getBuiltinTabPath(tabName: str, tabId: str) -> str:
     return config["builtinTabs"][tabName]
 
   return getBuiltinTabPath
@@ -69,13 +69,13 @@ def makeGenerateTabConfig(limits: TabSizeLimits, pathGetter: PathGetter):
       "displayName": tabName,
       "id": tabId,
       "maxSize": limits[tabId] if tabId in limits else None,
-      "path": pathGetter(tabName)
+      "path": pathGetter(tabName, tabId)
     }
 
   return generateTabConfig
 
 def makeExpandTabConfig(globalConfig: GlobalConfig):
-  def expandTabConfig(tabConfig: BaseTabConfig) -> TabConfig:
+  def expandTabConfig(tabConfig: BaseTabConfig) -> SingleTabConfig:
     return {
       **tabConfig,
       **globalConfig,
@@ -83,23 +83,35 @@ def makeExpandTabConfig(globalConfig: GlobalConfig):
 
   return expandTabConfig
 
-def getTabConfigs(globalConfig: GlobalConfig, tabs: List[str], pathGetter: PathGetter) -> List[TabConfig]:
+def getTabConfigs(globalConfig: GlobalConfig, tabs: List[str], pathGetter: PathGetter) -> List[SingleTabConfig]:
   return list(
-    map(makeExpandTabConfig(globalConfig, ),
+    map(makeExpandTabConfig(globalConfig),
       map(makeGenerateTabConfig(getTabLimits(globalConfig["runtimeConfig"]), pathGetter), tabs)
     )
   )
 
-def getCustomTabsConfigs(globalConfig: GlobalConfig) -> List[TabConfig]:
+def getCustomTabsConfigs(globalConfig: GlobalConfig) -> List[SingleTabConfig]:
   return getTabConfigs(
     globalConfig,
     list(filter(isNotEmpty, map(normalizeTabName, globalConfig["runtimeConfig"]["tabs"].split(',')))),
     makeGetCustomTabPath(globalConfig["runtimeConfig"])
   )
 
-def getBuiltinTabsConfig(globalConfig: GlobalConfig) -> List[TabConfig]:
+def getBuiltinTabsConfig(globalConfig: GlobalConfig) -> List[SingleTabConfig]:
   return getTabConfigs(
     globalConfig,
     list(globalConfig["staticConfig"]["builtinTabs"].keys()),
     makeGetBuiltinTabPath(globalConfig["staticConfig"])
   )
+
+def makeAreDifferentTabs(tab: SingleTabConfig):
+  def areDifferentTabs(otherTab: SingleTabConfig):
+    return tab["id"] != otherTab["id"]
+
+  return areDifferentTabs
+
+def mergeTabConfigs(tabConfigsA: List[SingleTabConfig], tabConfigsB: List[SingleTabConfig]) -> List[TabConfig]:
+  everyTab = [*tabConfigsA, *tabConfigsB]
+  tabsDict = { tab["id"]: tab for tab in everyTab}
+
+  return [ { **tab, "otherTabs": list(filter(makeAreDifferentTabs(tab), everyTab)) } for (id, tab) in tabsDict.items()]

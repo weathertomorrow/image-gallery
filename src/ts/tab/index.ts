@@ -77,8 +77,7 @@ export const makeInitTab = (config: Config, preloadRoot: Element) => (tabRoot: E
   })
   const updateImages = makeUpdateImages(aggregatedLoadListener)
 
-  new MutationObserver(makeImageSourcesObserver(debounce((element) => {
-    console.log(element)
+  new MutationObserver(makeImageSourcesObserver(debounce(async (element) => {
     resetLoadingPrevPage()
     void updateImages(extractImageSrcs(element), images)
   }, config.debounceMs))).observe(elements.imageSrcs.main, { childList: true });
@@ -86,7 +85,7 @@ export const makeInitTab = (config: Config, preloadRoot: Element) => (tabRoot: E
   [...elements.imageSrcs.prev, ...elements.imageSrcs.next].forEach((imageSrcNode) => {
     preloadImages(preloadRoot, extractImageSrcs(imageSrcNode))
 
-    new MutationObserver(makeImageSourcesObserver(debounce((element) => {
+    new MutationObserver(makeImageSourcesObserver(debounce(async (element) => {
       preloadImages(preloadRoot, extractImageSrcs(element))
     }, config.debounceMs))).observe(imageSrcNode, { childList: true })
   })

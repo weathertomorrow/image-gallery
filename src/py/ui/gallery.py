@@ -1,35 +1,41 @@
 import gradio
 from typing import TypedDict, List, Callable
 
+from src.py.sort import SortBy, SortOrder
 from src.py.utils.tabs import getTabElementId
 from src.py.utils.str import withPrefix
 from src.py.config import TabConfig
 
-class Gallery(TypedDict):
+class Navigation(TypedDict):
   firstPage: gradio.Button
   prevPage: gradio.Button
   pageIndex: gradio.Number
   nextPage: gradio.Button
   lastPage: gradio.Button
+
+class Sort(TypedDict):
+  by: gradio.Radio
+  order: gradio.Radio
+  searchBox: gradio.Textbox
+
+class Gallery(TypedDict):
+  navigation: Navigation
+  sort: Sort
   gallery: gradio.Box
   buttons: List[List[gradio.Button]]
   hiddenImagesSrcContainers: List[gradio.HTML]
+  hiddenSelectedImage: gradio.Image
 
-ImageClickHandler = Callable[[int, int], None]
-
-def makeCreateButton(tabConfig: TabConfig, imageClickHandler: ImageClickHandler):
+def makeCreateButton(tabConfig: TabConfig):
   suffixes = tabConfig["staticConfig"]["suffixes"]
 
-  def createButton(column: int, row: int,):
+  def createButton(column: int, row: int):
     button = gradio.Button(value = "", elem_id = getTabElementId(withPrefix(f'{column}_{row}', suffixes["imgButton"]), tabConfig))
-    button.click(lambda x = column, y = row: imageClickHandler(x, y))
-
     return button
 
   return createButton
 
 GetImagesPage = Callable[[int], str]
-
 def createSrcContainers(tabConfig: TabConfig, getImagesPage: GetImagesPage) -> List[gradio.HTML]:
   preloadPagesAmount = tabConfig["runtimeConfig"]["preloadPages"]
   suffixes = tabConfig["staticConfig"]["suffixes"]
@@ -43,13 +49,25 @@ def createSrcContainers(tabConfig: TabConfig, getImagesPage: GetImagesPage) -> L
     in range(0 - preloadPagesAmount, preloadPagesAmount + 1)
   ]
 
-def createGallery(tabConfig: TabConfig, getImagesPage: GetImagesPage, imageClickHandler: ImageClickHandler) -> Gallery:
+class CreateGalleryArg(TypedDict):
+  tabConfig: TabConfig
+  getImagesPage: GetImagesPage
+
+def createGallery(arg: CreateGalleryArg) -> Gallery:
+  tabConfig = arg["tabConfig"]
   staticConfig = tabConfig["staticConfig"]
   suffixes = staticConfig["suffixes"]
-  createButton = makeCreateButton(tabConfig, imageClickHandler)
 
   with gradio.Column(scale = 2):
-    hiddenImagesSrcContainers = createSrcContainers(tabConfig, getImagesPage)
+    hiddenImagesSrcContainers = createSrcContainers(tabConfig, arg["getImagesPage"])
+    hiddenSelectedImage = gradio.Image(visible = False, type = "pil")
+
+    createButton = makeCreateButton(tabConfig)
+
+    with gradio.Row():
+      sortBy = gradio.Radio(value = tabConfig["staticConfig"]["tabDefaults"]["sortBy"].value, choices = [opt.value for opt in SortBy] , label = "sort by", interactive = True)
+      sortOrder = gradio.Radio(value = tabConfig["staticConfig"]["tabDefaults"]["sortOrder"].value, choices = [opt.value for opt in SortOrder], label = "sort order", interactive = True)
+      searchBox = gradio.Textbox(label = "search by name")
 
     with gradio.Row():
       firstPage = gradio.Button('First Page')
@@ -72,12 +90,20 @@ def createGallery(tabConfig: TabConfig, getImagesPage: GetImagesPage, imageClick
           )
 
   return {
-    "firstPage": firstPage,
-    "prevPage": prevPage,
-    "pageIndex": pageIndex,
-    "nextPage": nextPage,
-    "lastPage": lastPage,
+    "navigation": {
+      "firstPage": firstPage,
+      "prevPage": prevPage,
+      "pageIndex": pageIndex,
+      "nextPage": nextPage,
+      "lastPage": lastPage,
+    },
     "gallery": gallery,
     "buttons": buttons,
     "hiddenImagesSrcContainers": hiddenImagesSrcContainers,
+    "hiddenSelectedImage": hiddenSelectedImage,
+    "sort": {
+      "by": sortBy,
+      "order": sortOrder,
+      "searchBox": searchBox,
+    }
   }

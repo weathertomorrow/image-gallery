@@ -39,6 +39,7 @@ class IdSuffixesConfigs(TypedDict):
   gallery: str
   imgSrcs: str
   imgButton: str
+  moveToButton: str
 
 class TabDefaults(TypedDict):
   pageIndex: int
@@ -64,6 +65,7 @@ staticConfig: StaticConfig = {
     "gallery": "gallery",
     "imgSrcs": "imgSrcs",
     "imgButton": "imgButton",
+    "moveToButton": "moveToButton",
   },
   "tabDefaults": {
     "pageIndex": 0,
@@ -89,8 +91,11 @@ class BaseTabConfig(TypedDict):
   maxSize: Union[int, None]
   path: str
 
-class TabConfig(BaseTabConfig, GlobalConfig):
+class SingleTabConfig(BaseTabConfig, GlobalConfig):
   pass
+
+class TabConfig(SingleTabConfig):
+  otherTabs: list[SingleTabConfig]
 
 class UILabelsConfig(TypedDict):
   extension_name: str

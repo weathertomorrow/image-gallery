@@ -5,7 +5,7 @@ from modules.shared import opts, OptionInfo
 
 from src.py.config import defaultConfigurableConfig, staticConfig, uiLabelsConfig
 from src.py.utils.str import withSuffix
-from src.py.utils.config import getRuntimeConfig, getCustomTabsConfigs, getBuiltinTabsConfig, getConfigFieldId, getGlobalConfig
+from src.py.utils.config import getRuntimeConfig, getCustomTabsConfigs, getBuiltinTabsConfig, getConfigFieldId, getGlobalConfig, mergeTabConfigs
 from src.py.tabs import createTab
 
 def setup_tabs():
@@ -14,7 +14,10 @@ def setup_tabs():
   customTabConfigs = getCustomTabsConfigs(globalConfig)
 
   # merge configs to avoid duplicates
-  tabs = { tab["id"]: tab for tab in [*defaultTabConfigs, *customTabConfigs] }.values()
+  tabs = mergeTabConfigs(defaultTabConfigs, customTabConfigs)
+
+  for tab in tabs:
+    print(tab["path"])
 
   with gradio.Blocks(analytics_enabled = False) as gallery:
     with gradio.Tabs(elem_id = withSuffix(staticConfig["extensionId"], staticConfig["suffixes"]["extensionTab"])):

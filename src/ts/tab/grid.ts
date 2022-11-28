@@ -40,6 +40,5 @@ export const updateGridCssVariables = (dimensions: Dimensions): void => {
 
   if (!isNil(root) && root instanceof HTMLElement) {
     root.style.setProperty('--images_gallery__columns', `${dimensions.columns}`)
-    root.style.setProperty('--images_gallery__rows', `${dimensions.rows}`)
   }
 }

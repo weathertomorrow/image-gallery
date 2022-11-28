@@ -1,5 +1,5 @@
-from os import makedirs, path, DirEntry,  scandir
-from typing import Union, List
+from os import makedirs, path, DirEntry, scandir
+from typing import Union, TypedDict
 
 from src.py.config import StaticConfig
 
@@ -20,11 +20,11 @@ def getImageFullPath(staticConfig: StaticConfig, filePath: str) -> str:
 
 ImagesInDir = list[DirEntry[str]]
 def getImagesInDir(staticConfig: StaticConfig, dirPath: str) -> ImagesInDir:
-    with scandir(dirPath) as directory:
-      images = []
+  with scandir(dirPath) as directory:
+    images = []
 
-      for file in directory:
-        if isImage(staticConfig, file):
-          images.append(file)
+    for file in directory:
+      if isImage(staticConfig, file):
+        images.append(file)
 
-      return images
+    return images

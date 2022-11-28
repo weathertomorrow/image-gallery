@@ -23,3 +23,6 @@ def makeGetImages(tabConfig: TabConfig, imagesInDir: ImagesInDir) -> GetImages:
 PostProcess = Callable[[List[str]], str]
 def imagesIntoData(images: List[str]) -> str:
   return "\n".join(images)
+
+def dataIntoImags(data: str) -> List[str]:
+  return data.splitlines()
