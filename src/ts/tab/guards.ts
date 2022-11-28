@@ -1,4 +1,5 @@
 import { isString, isNil, isPlainObject } from 'lodash'
+import { ParsedImage } from './images'
 
 export const isNotNil = <T>(arg: T | null | undefined): arg is T => !isNil(arg)
 
@@ -28,3 +29,17 @@ export function isEmpty<T> (arg: T): boolean {
 
   return false
 }
+
+export const isObjectWithPartialKeys = <T>(
+  arg: unknown,
+  requiredKeys: Array<keyof T>
+): arg is Partial<T> => isLiteral(arg) && requiredKeys.some((key) => key in arg)
+
+export const isArrayOf = <T>(
+  arg: unknown,
+  guard: (item: unknown) => item is T
+): arg is T[] => Array.isArray(arg) && arg.every(guard)
+
+export const isImagePathData = (arg: unknown): arg is ParsedImage => (
+  isLiteral(arg) && isObjectWithPartialKeys<ParsedImage>(arg, ['image', 'thumbnail'])
+)

@@ -1,18 +1,36 @@
-import { isNil, negate, nth } from 'lodash'
-import { isEmpty } from './guards'
+import { isArray, isNil, negate, nth } from 'lodash'
+import { Nullable } from '../utils/types'
+import { isArrayOf, isEmpty, isImagePathData } from './guards'
 
-export const extractImageSrcs = (element: Element): string[] => {
-  return element.innerHTML.split('\n').filter(negate(isEmpty)).map((src) => `file=${src}`)
+export type ParsedImage = Readonly<{
+  image: string
+  thumbnail: Nullable<string>
+}>
+
+const toLocalImagePath = (imgPath: string): string => `file=${imgPath}`
+
+export const extractImageSrcs = (element: Element): ParsedImage[] => {
+  const parsedJson = JSON.parse(element.innerHTML)
+  const data = isArray(parsedJson) ? parsedJson.filter(negate(isEmpty)) : parsedJson
+
+  if (isArrayOf(data, isImagePathData)) {
+    return data.map((image) => ({
+      image: toLocalImagePath(image.image),
+      thumbnail: isEmpty(image.thumbnail) ? null : toLocalImagePath(image.thumbnail)
+    }))
+  }
+
+  return []
 }
 
 export type ImagesElements = HTMLImageElement[]
-export const insertImagesIntoButtons = (imagesSources: string[], buttons: Element[]): ImagesElements => {
+export const insertImagesIntoButtons = (imagesSources: ParsedImage[], buttons: Element[]): ImagesElements => {
   return buttons.map((button, index) => {
     button.innerHTML = ''
 
     const imageSrc = nth(imagesSources, index)
     const imageTag = document.createElement('img')
-    imageTag.src = imageSrc ?? ''
+    imageTag.src = imageSrc?.image ?? ''
 
     button.appendChild(imageTag)
 
@@ -46,7 +64,7 @@ export const makeChangeImagesVisiblity = (shouldBeVisible: boolean, images: Imag
   images.forEach((image) => changeImageVisiblity(shouldBeVisible, image))
 }
 
-export type UpdateImages = (newImagesSources: string[], images: ImagesElements) => Promise<boolean>
+export type UpdateImages = (newImagesSources: ParsedImage[], images: ImagesElements) => Promise<boolean>
 export const makeUpdateImages = (
   listener: (imageIndex: number) => void
 ): UpdateImages => async (newImagesSources, images) => {
@@ -59,7 +77,7 @@ export const makeUpdateImages = (
 
     if (!isNil(source)) {
       markImageAsNormal(image)
-      image.src = source
+      image.src = source.image
       image.onload = () => listener(i)
     } else {
       markImageAsPermanentlyHidden(image)
@@ -70,20 +88,20 @@ export const makeUpdateImages = (
   return true
 }
 
-export type PreloadImages = (root: Element, imageSrcs: string[]) => void
+export type PreloadImages = (root: Element, imageSrcs: ParsedImage[]) => void
 export const makePreloadImages = (): PreloadImages => {
   const alreadyPreloaded = new Map<string, null>()
 
-  return (root: Element, imageSrcs: string[]): void => {
+  return (root: Element, imageSrcs: ParsedImage[]): void => {
     imageSrcs.forEach((imageSrc) => {
-      if (alreadyPreloaded.has(imageSrc)) {
+      if (alreadyPreloaded.has(imageSrc.image)) {
         return
       }
 
-      alreadyPreloaded.set(imageSrc, null)
+      alreadyPreloaded.set(imageSrc.image, null)
       const imageTag = document.createElement('img')
 
-      imageTag.src = imageSrc
+      imageTag.src = imageSrc.image
       imageTag.hidden = true
 
       root.appendChild(imageTag)

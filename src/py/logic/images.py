@@ -1,3 +1,5 @@
+from json import dumps, loads
+
 from src.py.config import TabConfig, SortOrder, SortBy
 from src.py.logic.types import ImagesInDir, MUTABLE_ImagesInDirRef, GetImages
 
@@ -32,7 +34,8 @@ def makeGetImages(tabConfig: TabConfig, imagesInDir: MUTABLE_ImagesInDirRef) -> 
 
 
 def imagesIntoData(images: list[str]) -> str:
-  return "\n".join(images)
+  return dumps([ {"image": image} for image in images ])
 
 def dataIntoImags(data: str) -> list[str]:
-  return data.splitlines()
+  images = loads(data)
+  return [image["image"] for image in images]

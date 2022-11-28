@@ -75,10 +75,8 @@ const getImageButtons = (config: TabConfig): HTMLButtonElement[] => {
 const getProgressBar = (config: TabConfig): Nullable<Element> => {
   const id = `#${withSuffix(config.suffixes.progressBar, config.tabId)}`
 
-  return config.appRoot
-    // ¯\_(ツ)_/¯
-    .querySelector(id)
-    ?.querySelector(id)
+  // ¯\_(ツ)_/¯
+  return config.appRoot.querySelector(id)?.querySelector(id)
 }
 
 const getElements = (config: TabConfig): Nullable<TabElements> => {
