@@ -1,8 +1,10 @@
 from os import makedirs, path, DirEntry, scandir
+from ntpath import basename
 from shutil import rmtree
 from typing import Union
 
-from src.py.config import StaticConfig
+from src.py.config import StaticConfig, TabConfig
+from src.py.modules.shared.guards import isEmpty
 
 def makeDirIfMissing(dirPath: str):
   try:
@@ -36,3 +38,11 @@ def getImagesInDir(staticConfig: StaticConfig, dirPath: str) -> ImagesInDir:
         images.append(file)
 
     return images
+
+def imageBelongsToTab(tab: TabConfig, imagePath: str):
+  common = path.commonpath([tab["path"], imagePath])
+  return not isEmpty(common) and path.samefile(common, tab["path"])
+
+
+def getFilenameFromPath(path: str):
+  return basename(path)

@@ -1,6 +1,6 @@
 import gradio
 
-from modules.script_callbacks import on_ui_settings, on_ui_tabs
+from modules.script_callbacks import on_ui_settings, on_ui_tabs, on_image_saved
 from modules.shared import opts, OptionInfo
 from modules.generation_parameters_copypaste import bind_buttons
 
@@ -10,8 +10,10 @@ from src.py.modules.shared.config import getConfigFieldId, getGlobalConfig, getR
 
 from src.py.modules.tabs.tabs import createTab
 from src.py.modules.thumbnails.thumbnails import hadleMissingThumbnails
+from src.py.modules.thumbnails.listeners import makeImageSavedListener
 
-def setup_tabs():
+
+def setupTabs():
   globalConfig = getGlobalConfig(getRuntimeConfig(opts, staticConfig, defaultConfigurableConfig), staticConfig)
   defaultTabConfigs = getBuiltinTabsConfig(globalConfig)
   customTabConfigs = getCustomTabsConfigs(globalConfig)
@@ -24,17 +26,17 @@ def setup_tabs():
 
     with gradio.Tabs(elem_id = withSuffix(staticConfig["extensionId"], staticConfig["elementsSuffixes"]["extensionTab"])):
       for tab in tabs:
-        tabOutput = createTab(tab)
-        bind_buttons(*tabOutput["sendToButtonsConfig"])
+        bind_buttons(*createTab(tab)["sendToButtonsConfig"])
+        on_image_saved(makeImageSavedListener(tab))
 
   return (gallery, uiLabelsConfig["extension_name"], staticConfig["extensionId"]),
 
-def setup_options():
+def setupOptions():
   section = (staticConfig["extensionId"], uiLabelsConfig["extension_name"])
 
   for key in defaultConfigurableConfig.keys():
     opts.add_option(getConfigFieldId(staticConfig, key), OptionInfo(*defaultConfigurableConfig[key], section = section))
 
 # calling code
-on_ui_settings(setup_options)
-on_ui_tabs(setup_tabs)
+on_ui_settings(setupOptions)
+on_ui_tabs(setupTabs)

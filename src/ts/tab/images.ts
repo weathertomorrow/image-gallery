@@ -77,11 +77,11 @@ export const makeUpdateImages = (
   }
 
   images.forEach((image, i) => {
-    const source = newImagesSources[i]
+    const source = newImagesSources[i].thumbnail ?? newImagesSources[i].image
 
     if (!isNil(source)) {
       markImageAsNormal(image)
-      image.src = source.image
+      image.src = source
       image.onload = () => listener(i)
     } else {
       markImageAsPermanentlyHidden(image)
