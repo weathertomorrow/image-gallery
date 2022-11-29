@@ -1,7 +1,7 @@
 from os import DirEntry
 
 from src.py.config import TabConfig
-from src.py.modules.thumbnails.logic.names import getThumbnailNameFromImageName
+from src.py.modules.shared.names import getThumbnailNameFromImageName
 from src.py.modules.thumbnails.logic.types import GetImagesWithMissingThumbnailsOutput
 
 def makeIsMissingThumbnail(tabConfig: TabConfig, allThumbnails: dict[str, None]):

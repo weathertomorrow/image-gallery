@@ -11,7 +11,7 @@ from src.py.config import TabConfig, SingleTabConfig
 from src.py.modules.tabs.ui.gallery import Gallery
 from src.py.modules.tabs.ui.sidePanel import SidePanel
 
-from src.py.modules.tabs.logic.images import dataIntoImags
+from src.py.modules.tabs.logic.images import dataIntoImages
 
 def formatImageTime(time: float) -> str:
   return "<div style='color:#999' align='right'>" + strftime("%Y-%m-%d %H:%M:%S", localtime(time)) + "</div>"
@@ -19,7 +19,7 @@ def formatImageTime(time: float) -> str:
 ButtonClickHandler = Callable[[str], tuple]
 def makeOnImageClick(tabConfig: TabConfig, x: int, y: int) -> ButtonClickHandler:
   def onImageClick(imagesInHtml: str):
-    image = dataIntoImags(imagesInHtml)[y * tabConfig["runtimeConfig"]["pageColumns"] + x]
+    image = dataIntoImages(imagesInHtml)[y * tabConfig["runtimeConfig"]["pageColumns"] + x]["imagePath"]
     return (image, image, formatImageTime(stat(image).st_ctime))
 
   return onImageClick

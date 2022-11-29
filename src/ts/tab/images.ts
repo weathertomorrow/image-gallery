@@ -34,7 +34,7 @@ export const insertImagesIntoButtons = (imagesSources: ParsedImage[], buttons: E
 
     const imageSrc = nth(imagesSources, index)
     const imageTag = document.createElement('img')
-    imageTag.src = imageSrc?.image ?? ''
+    imageTag.src = imageSrc?.thumbnail ?? imageSrc?.image ?? ''
 
     button.appendChild(imageTag)
 
@@ -92,20 +92,22 @@ export const makeUpdateImages = (
   return true
 }
 
-export type PreloadImages = (imageSrcs: ParsedImage[]) => void
+export type PreloadImages = (images: ParsedImage[]) => void
 export const makePreloadImages = (root: Element): PreloadImages => {
   const alreadyPreloaded = new Map<string, null>()
 
-  return (imageSrcs: ParsedImage[]): void => {
-    imageSrcs.forEach((imageSrc) => {
-      if (alreadyPreloaded.has(imageSrc.image)) {
+  return (images: ParsedImage[]): void => {
+    images.forEach((image) => {
+      const imageSrc = image.thumbnail ?? image.image
+
+      if (alreadyPreloaded.has(imageSrc)) {
         return
       }
 
-      alreadyPreloaded.set(imageSrc.image, null)
+      alreadyPreloaded.set(imageSrc, null)
       const imageTag = document.createElement('img')
 
-      imageTag.src = imageSrc.image
+      imageTag.src = imageSrc
       imageTag.hidden = true
 
       root.appendChild(imageTag)

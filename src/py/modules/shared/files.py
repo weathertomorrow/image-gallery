@@ -1,4 +1,5 @@
-from os import makedirs, rmdir, path, DirEntry, scandir
+from os import makedirs, path, DirEntry, scandir
+from shutil import rmtree
 from typing import Union
 
 from src.py.config import StaticConfig
@@ -11,7 +12,7 @@ def makeDirIfMissing(dirPath: str):
 
 def removeDirIfExists(dirPath: str):
   try:
-    rmdir(dirPath)
+    rmtree(dirPath, ignore_errors = True)
   except OSError:
     return None
 

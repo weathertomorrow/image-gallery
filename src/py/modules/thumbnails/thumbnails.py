@@ -17,7 +17,7 @@ htmlInfoMessage = {
 def makeGenerateThumbnails(tabConfigs: list[TabConfig], outputsFromTabs: MUTABLE_getImagesWithMisisngThumbnailsOutputs):
   def generateThumbnails(_: float):
     threads: list[Thread]  = []
-    threadOutputs = splitThreadOutputsEvenly(outputsFromTabs)
+    threadOutputs = outputsFromTabs
 
     for tabConfig in tabConfigs:
       tabThreadOutput = threadOutputs[tabConfig["id"]]

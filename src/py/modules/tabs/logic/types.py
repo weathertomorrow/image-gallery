@@ -1,12 +1,18 @@
-from typing import TypedDict, Callable
+from typing import TypedDict, Callable, Union
 
 from src.py.config import SortBy, SortOrder
 from src.py.modules.shared.mutable import MUTABLE_ImagesInDirRef
 
 # importing types in python can cause dependecy cycles
 
-GetImages = Callable[[float, SortOrder, SortBy], list[str]]
-PostProcess = Callable[[list[str]], str]
+class ImageOnPage(TypedDict):
+  imagePath: str
+  thumbnailPath: Union[str, None]
+
+ImagesPage = list[ImageOnPage]
+GetImages = Callable[[float, SortOrder, SortBy], ImagesPage]
+
+PostProcess = Callable[[ImagesPage], str]
 
 PageChangingFNOutput = tuple[
   int, # current page index

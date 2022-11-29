@@ -2,7 +2,7 @@ import gradio
 
 from src.py.config import TabConfig
 from src.py.modules.shared.files import makeDirIfMissing, removeDirIfExists
-from src.py.modules.shared.mutable import getImagesInDirRef, makeWithRefreshFiles
+from src.py.modules.shared.mutable import getImagesInDirRef, makeWithRefreshFiles, addThumbnailsToImages
 
 from src.py.modules.tabs.ui.gallery import createGallery
 from src.py.modules.tabs.ui.sidePanel import createSidePanel
@@ -25,10 +25,10 @@ def createTab(tabConfig: TabConfig):
   defaults = staticConfig["tabDefaults"]
   runtimeConfig = tabConfig["runtimeConfig"]
 
-  allImagesInDirRef = getImagesInDirRef(tabConfig, staticConfig, tabConfig["path"])
+  allImagesInDirRef = addThumbnailsToImages(getImagesInDirRef(tabConfig, tabConfig["path"]), tabConfig)
   getImages = makeGetImages(tabConfig, allImagesInDirRef)
   imagesPerPage = getImagesPerPage(tabConfig)
-  withRefreshFiles = makeWithRefreshFiles(allImagesInDirRef, staticConfig, tabConfig["path"])
+  withRefreshFiles = makeWithRefreshFiles(allImagesInDirRef, tabConfig)
 
   with gradio.Tab(label = tabConfig["displayName"], elem_id = getTabElementId(staticConfig["elementsSuffixes"]["galleryTab"], tabConfig)):
     with gradio.Row():
