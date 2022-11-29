@@ -79,6 +79,9 @@ export const makeUpdateImages = (
       markImageAsNormal(image)
       image.src = source
       image.onload = () => listener(i)
+      image.onerror = () => {
+        image.src = newImagesSources[i]?.image
+      }
     } else {
       markImageAsPermanentlyHidden(image)
       listener(i)

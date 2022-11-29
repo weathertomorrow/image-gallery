@@ -37,9 +37,9 @@ def deselectImage():
 def makeMoveImage(targetTab: SingleTabConfig, imagesInDir: MUTABLE_ImagesInDirRef):
   # these are here because files need to be refreshed afterwards
   def moveImage(sortOrder: str, sortBy: str, image: str, counter: float):
-    moveFileAndPreventDuplicates(image, targetTab["path"])
-    imageName = getFilenameFromPath(image)
+    moveFileAndPreventDuplicates(image, targetTab["path"], targetTab["runtimeConfig"]["modifyTimes"])
 
+    imageName = getFilenameFromPath(image)
     imageThumbnail = (
         imagesInDir["thumbnails"][imageName]
       if

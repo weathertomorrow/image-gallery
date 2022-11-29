@@ -1,4 +1,5 @@
-from os import makedirs, path, DirEntry, scandir, remove
+from os import makedirs, path, DirEntry, scandir, remove, utime
+from datetime import datetime
 from shutil import move, Error
 from ntpath import basename
 from shutil import rmtree
@@ -47,11 +48,15 @@ def imageBelongsToTab(tab: TabConfig, imagePath: str):
 def getFilenameFromPath(path: str):
   return basename(path)
 
-def moveFileAndPreventDuplicates(filePath: str, desination: str):
+def moveFileAndPreventDuplicates(filePath: str, desination: str, updateTimes = False):
   try:
     move(filePath, desination)
   except (Error) as e:
-    if ("already exists" in e.strerror):
+    if ("already exists" in e.__str__()):
       remove(filePath)
     else:
       raise e
+
+  if (updateTimes):
+    now = datetime.now().timestamp()
+    utime(path.join(desination, getFilenameFromPath(filePath)), (now, now))

@@ -23,6 +23,7 @@ class RuntimeConfig(TypedDict):
   maxTabsSizes: str
   preloadPages: int
   useThumbnails: bool
+  modifyTimes: bool
 
 class ConfigurableConfig(TypedDict):
   pageColumns: ConfigField[int]
@@ -32,10 +33,12 @@ class ConfigurableConfig(TypedDict):
   maxTabsSizes: ConfigField[str]
   preloadPages: ConfigField[int]
   useThumbnails: ConfigField[bool]
+  modifyTimes: ConfigField[bool]
 
 defaultConfigurableConfig: ConfigurableConfig = {
   "root": ("outputs", "Root gallery directory (directories for custom tabs will be created in it)"),
   "useThumbnails": (True, "Create & display thumbnails for generated images (speeds up the gallery)"),
+  "modifyTimes": (True, "Update image's modification time when moving it"),
   "pageColumns": (6, "Columns per gallery page"),
   "pageRows": (6, "Rows per gallery page"),
   "preloadPages": (2, "Amount of pages to preload in both directions"),
