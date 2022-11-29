@@ -1,7 +1,7 @@
 import re
 import os
 
-from typing import cast, List, Union, Callable
+from typing import cast, List, Union, Callable, TypedDict
 from modules.shared import Options
 
 from src.py.config import RuntimeConfig, StaticConfig, ConfigurableConfig, BaseTabConfig, GlobalConfig, SingleTabConfig, TabConfig
@@ -59,11 +59,18 @@ def makeGetCustomTabPath(config: RuntimeConfig) -> PathGetter:
 
 def makeGetBuiltinTabPath(config: StaticConfig) -> PathGetter:
   def getBuiltinTabPath(tabName: str, tabId: str) -> str:
-    return config["builtinTabs"][tabName]
+    return config["builtinTabs"][tabName]["path"]
 
   return getBuiltinTabPath
 
-def makeGenerateTabConfig(globalConfig: GlobalConfig, pathGetter: PathGetter):
+FlagGetter = Callable[[str, str], bool]
+
+class TabConfigGetters(TypedDict):
+  path: PathGetter
+  moveToEnabled: FlagGetter
+  sendToEnabled: FlagGetter
+
+def makeGenerateTabConfig(globalConfig: GlobalConfig, getters: TabConfigGetters):
   limits = getTabLimits(globalConfig["runtimeConfig"])
 
   def generateTabConfig(tabName: str) -> BaseTabConfig:
@@ -72,8 +79,10 @@ def makeGenerateTabConfig(globalConfig: GlobalConfig, pathGetter: PathGetter):
       "displayName": tabName,
       "id": tabId,
       "maxSize": limits[tabId] if tabId in limits else None,
-      "path": pathGetter(tabName, tabId),
-      "thumbnailsPath": pathGetter(tabName, tabId) + globalConfig["staticConfig"]["thumbnails"]["folderSuffix"]
+      "path": getters["path"](tabName, tabId),
+      "thumbnailsPath": getters["path"](tabName, tabId) + globalConfig["staticConfig"]["thumbnails"]["folderSuffix"],
+      "moveToEnabled": getters["moveToEnabled"](tabName, tabId),
+      "sendToEnabled": getters["sendToEnabled"](tabName, tabId),
     }
 
   return generateTabConfig
@@ -87,10 +96,10 @@ def makeExpandTabConfig(globalConfig: GlobalConfig):
 
   return expandTabConfig
 
-def getTabConfigs(globalConfig: GlobalConfig, tabs: List[str], pathGetter: PathGetter) -> List[SingleTabConfig]:
+def getTabConfigs(globalConfig: GlobalConfig, tabs: List[str], getters: TabConfigGetters) -> List[SingleTabConfig]:
   return list(
     map(makeExpandTabConfig(globalConfig),
-      map(makeGenerateTabConfig(globalConfig, pathGetter), tabs)
+      map(makeGenerateTabConfig(globalConfig, getters), tabs)
     )
   )
 
@@ -98,14 +107,23 @@ def getCustomTabsConfigs(globalConfig: GlobalConfig) -> List[SingleTabConfig]:
   return getTabConfigs(
     globalConfig,
     list(filter(isNotEmpty, map(normalizeTabName, globalConfig["runtimeConfig"]["tabs"].split(',')))),
-    makeGetCustomTabPath(globalConfig["runtimeConfig"])
+    {
+      "path": makeGetCustomTabPath(globalConfig["runtimeConfig"]),
+      "moveToEnabled": lambda _, __: True, # all custom tabs are allowed to be moved into,
+      "sendToEnabled": lambda _, __: False # all custom tabs are not allowed to be sent into
+    }
+
   )
 
 def getBuiltinTabsConfig(globalConfig: GlobalConfig) -> List[SingleTabConfig]:
   return getTabConfigs(
     globalConfig,
     list(globalConfig["staticConfig"]["builtinTabs"].keys()),
-    makeGetBuiltinTabPath(globalConfig["staticConfig"])
+    {
+      "path": makeGetBuiltinTabPath(globalConfig["staticConfig"]),
+      "moveToEnabled": lambda tabName, tabId: globalConfig["staticConfig"]["builtinTabs"][tabName]["moveToEnabled"],
+      "sendToEnabled": lambda tabName, tabId: globalConfig["staticConfig"]["builtinTabs"][tabName]["sendToEnabled"],
+    }
   )
 
 def makeAreDifferentTabs(tab: SingleTabConfig):

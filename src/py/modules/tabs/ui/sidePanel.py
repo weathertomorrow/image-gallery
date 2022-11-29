@@ -9,6 +9,7 @@ from src.py.modules.tabs.logic.tabs import getTabElementId
 class Buttons(TypedDict):
   deselect: gradio.Button
   moveTo: list[tuple[SingleTabConfig, gradio.Button]]
+  sendTo: dict[str, gradio.Button]
 
 class ImageInfo(TypedDict):
   prompts: gradio.Textbox
@@ -27,6 +28,12 @@ def makeCreateMoveToButton(tabCofig: TabConfig):
 
   return createMoveToButton
 
+def createSendToButton(otherTab: SingleTabConfig) -> gradio.Button:
+  return gradio.Button(value = f'Send to {otherTab["displayName"]}')
+
+def sortSendToTabs(tabs: list[SingleTabConfig]) -> list[SingleTabConfig]:
+  return sorted(tabs, key = lambda x: x["id"], reverse = True)
+
 
 def createSidePanel(tabConfig: TabConfig) -> SidePanel:
   createMoveToButton = makeCreateMoveToButton(tabConfig)
@@ -38,7 +45,12 @@ def createSidePanel(tabConfig: TabConfig) -> SidePanel:
       imgTime = gradio.HTML()
     with gradio.Column():
       with gradio.Row():
-        moveTo = [createMoveToButton(otherTab) for otherTab in tabConfig["otherTabs"]]
+        sendTo = {
+          tab["id"]: createSendToButton(tab) for tab in sortSendToTabs([tabConfig, *tabConfig["otherTabs"]]) if tab["sendToEnabled"]
+        }
+
+      with gradio.Row():
+        moveTo = [createMoveToButton(otherTab) for otherTab in tabConfig["otherTabs"] if otherTab["moveToEnabled"]]
       deselect = gradio.Button(value = "Close")
 
   return  {
@@ -46,6 +58,7 @@ def createSidePanel(tabConfig: TabConfig) -> SidePanel:
     "buttons": {
       "deselect": deselect,
       "moveTo": moveTo,
+      "sendTo": sendTo,
     },
     "image": {
       "prompts": imgPrompts,

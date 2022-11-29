@@ -2,6 +2,7 @@ import gradio
 
 from modules.script_callbacks import on_ui_settings, on_ui_tabs
 from modules.shared import opts, OptionInfo
+from modules.generation_parameters_copypaste import bind_buttons
 
 from src.py.config import defaultConfigurableConfig, staticConfig, uiLabelsConfig
 from src.py.modules.shared.str import withSuffix
@@ -23,7 +24,8 @@ def setup_tabs():
 
     with gradio.Tabs(elem_id = withSuffix(staticConfig["extensionId"], staticConfig["elementsSuffixes"]["extensionTab"])):
       for tab in tabs:
-        createTab(tab)
+        tabOutput = createTab(tab)
+        bind_buttons(*tabOutput["sendToButtonsConfig"])
 
   return (gallery, uiLabelsConfig["extension_name"], staticConfig["extensionId"]),
 

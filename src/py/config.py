@@ -64,11 +64,16 @@ class Thumbnails(TypedDict):
   filePrefix: str
   maxSize: int
 
+class BuiltinTab(TypedDict):
+  path: str
+  moveToEnabled: bool
+  sendToEnabled: bool
+
 class StaticConfig(TypedDict):
   extensionId: str
   elementsSuffixes: IdSuffixesConfigs
   imageExtensions: List[str]
-  builtinTabs: dict[str, str]
+  builtinTabs: dict[str, BuiltinTab]
   scriptPath: str
   cssClassPrefix: str
   tabDefaults: TabDefaults
@@ -101,10 +106,26 @@ staticConfig: StaticConfig = {
   },
   "imageExtensions": [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"],
   "builtinTabs": {
-    "txt2img": opts.outdir_txt2img_samples,
-    "img2img": opts.outdir_img2img_samples,
-    "Extras": opts.outdir_extras_samples,
-    "Favorites": opts.outdir_save
+    "txt2img": {
+      "path": opts.outdir_txt2img_samples,
+      "moveToEnabled": False,
+      "sendToEnabled": True,
+    },
+    "img2img": {
+      "path":opts.outdir_img2img_samples ,
+      "moveToEnabled": False,
+      "sendToEnabled": True,
+    },
+    "Extras": {
+      "path": opts.outdir_extras_samples,
+      "moveToEnabled": True,
+      "sendToEnabled": False,
+    },
+    "Favorites": {
+      "path": opts.outdir_save,
+      "moveToEnabled": True,
+      "sendToEnabled": False,
+    }
   }
 }
 
@@ -112,7 +133,7 @@ class GlobalConfig(TypedDict):
   runtimeConfig: RuntimeConfig
   staticConfig: StaticConfig
 
-class BaseTabConfig(TypedDict):
+class BaseTabConfig(BuiltinTab):
   displayName: str
   id: str
   maxSize: Union[int, None]

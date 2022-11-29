@@ -1,4 +1,5 @@
 import gradio
+from typing import TypedDict
 
 from src.py.config import TabConfig
 from src.py.modules.shared.files import makeDirIfMissing, removeDirIfExists
@@ -13,7 +14,10 @@ from src.py.modules.tabs.logic.types import PageChangingFNConfig
 from src.py.modules.tabs.logic.images import makeGetImages, getImagesPerPage, imagesIntoData
 from src.py.modules.tabs.logic.pages import makeChangePage, makeGoToLastPage, makeGoToFirstPage, makeGoToPageAtIndex, getPageOffsets, makeRefreshPageForCounter
 
-def createTab(tabConfig: TabConfig):
+class CreateTabReturnValue(TypedDict):
+  sendToButtonsConfig: tuple[dict[str, gradio.Button], gradio.Textbox, gradio.Textbox]
+
+def createTab(tabConfig: TabConfig) -> CreateTabReturnValue:
   makeDirIfMissing(tabConfig["path"])
 
   if (tabConfig["runtimeConfig"]["useThumbnails"]):
@@ -68,3 +72,11 @@ def createTab(tabConfig: TabConfig):
   for (otherTab, moveToOtherTabButton) in sidePanel["buttons"]["moveTo"]:
     moveToOtherTabButton.click(makeMoveImage(otherTab), **inputsAndOutputs["moveToTabButton"])
   sidePanel["buttons"]["deselect"].click(deselectImage, **inputsAndOutputs["deselectButton"])
+
+  return {
+    "sendToButtonsConfig": (
+      sidePanel["buttons"]["sendTo"],
+      sidePanel["image"]["name"],
+      sidePanel["image"]["prompts"],
+    )
+  }
