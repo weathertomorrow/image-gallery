@@ -8,9 +8,10 @@ from modules.extras import run_pnginfo
 
 from src.py.config import TabConfig, SingleTabConfig
 
-from src.py.ui.gallery import Gallery
-from src.py.ui.sidePanel import SidePanel
-from src.py.logic.images import dataIntoImags
+from src.py.modules.tabs.ui.gallery import Gallery
+from src.py.modules.tabs.ui.sidePanel import SidePanel
+
+from src.py.modules.tabs.logic.images import dataIntoImags
 
 def formatImageTime(time: float) -> str:
   return "<div style='color:#999' align='right'>" + strftime("%Y-%m-%d %H:%M:%S", localtime(time)) + "</div>"
@@ -18,7 +19,7 @@ def formatImageTime(time: float) -> str:
 ButtonClickHandler = Callable[[str], tuple]
 def makeOnImageClick(tabConfig: TabConfig, x: int, y: int) -> ButtonClickHandler:
   def onImageClick(imagesInHtml: str):
-    image = dataIntoImags(imagesInHtml)[y * tabConfig['runtimeConfig']['pageColumns'] + x]
+    image = dataIntoImags(imagesInHtml)[y * tabConfig["runtimeConfig"]["pageColumns"] + x]
     return (image, image, formatImageTime(stat(image).st_ctime))
 
   return onImageClick
@@ -36,7 +37,7 @@ def deselectImage():
 def makeMoveImage(targetTab: SingleTabConfig):
   # these are here because files need to be refreshed afterwards
   def moveImage(sortOrder: str, sortBy: str, image: str, counter: float):
-    move(image, targetTab['path'])
+    move(image, targetTab["path"])
     return (None, 0 if int(counter) == 1 else 1)
 
   return moveImage
@@ -72,41 +73,41 @@ class UNSAFE_UntypedInputOutputPairs(TypedDict):
 
 # untyped because not sure how to get the base "Component" type that gradio wants (doesnt seem to be exposed by gradio)
 def getEventInputsAndOutputs(gallery: Gallery, sidePanel: SidePanel) -> UNSAFE_UntypedInputOutputPairs:
-  sortArgOrder = (gallery['sort']['order'], gallery['sort']['by'])
+  sortArgOrder = (gallery["sort"]["order"], gallery["sort"]["by"])
 
   navigation: InputOutputPair = {
-    "inputs": [*sortArgOrder, gallery['navigation']['pageIndex']],
-    "outputs": [gallery['navigation']['pageIndex'], *sortArgOrder, *gallery['hidden']['imagesSrcContainers']]
+    "inputs": [*sortArgOrder, gallery["navigation"]["pageIndex"]],
+    "outputs": [gallery["navigation"]["pageIndex"], *sortArgOrder, *gallery["hidden"]["imagesSrcContainers"]]
   }
 
   hiddenRefreshButton: InputOutputPair = {
-    "inputs": [*sortArgOrder, gallery['navigation']['pageIndex']],
-    "outputs": [gallery['navigation']['pageIndex'], *sortArgOrder, *gallery['hidden']['imagesSrcContainers']]
+    "inputs": [*sortArgOrder, gallery["navigation"]["pageIndex"]],
+    "outputs": [gallery["navigation"]["pageIndex"], *sortArgOrder, *gallery["hidden"]["imagesSrcContainers"]]
   }
 
   hiddenRefreshCounter: InputOutputPair = {
-    "inputs": [*sortArgOrder, gallery['navigation']['pageIndex'], gallery['hidden']['refreshCounter']],
-    "outputs": [gallery['navigation']['pageIndex'], *sortArgOrder, gallery['hidden']['refreshCounter'], *gallery['hidden']['imagesSrcContainers']]
+    "inputs": [*sortArgOrder, gallery["navigation"]["pageIndex"], gallery["hidden"]["refreshCounter"]],
+    "outputs": [gallery["navigation"]["pageIndex"], *sortArgOrder, gallery["hidden"]["refreshCounter"], *gallery["hidden"]["imagesSrcContainers"]]
   }
 
   moveToTab: InputOutputPair = {
-    "inputs": [*sortArgOrder, sidePanel['image']['name'], gallery['hidden']['refreshCounter']],
-    "outputs": [gallery['hidden']['selectedImage'], gallery['hidden']['refreshCounter']]
+    "inputs": [*sortArgOrder, sidePanel["image"]["name"], gallery["hidden"]["refreshCounter"]],
+    "outputs": [gallery["hidden"]["selectedImage"], gallery["hidden"]["refreshCounter"]]
   }
 
   selectedImage: InputOutputPair = {
-    "inputs": [gallery['hidden']['selectedImage']],
-    "outputs": [sidePanel['image']['prompts'], sidePanel['container']]
+    "inputs": [gallery["hidden"]["selectedImage"]],
+    "outputs": [sidePanel["image"]["prompts"], sidePanel["container"]]
   }
 
   deselectButton: InputOutputPair = {
     "inputs": None,
-    "outputs": [gallery['hidden']['selectedImage']]
+    "outputs": [gallery["hidden"]["selectedImage"]]
   }
 
   imageButton: InputOutputPair = {
-    "inputs": [gallery['hidden']['imagesSrcContainers'][len(gallery['hidden']['imagesSrcContainers']) // 2]],
-    "outputs":[gallery['hidden']['selectedImage'], sidePanel['image']['name'], sidePanel['image']['creationTime']]
+    "inputs": [gallery["hidden"]["imagesSrcContainers"][len(gallery["hidden"]["imagesSrcContainers"]) // 2]],
+    "outputs":[gallery["hidden"]["selectedImage"], sidePanel["image"]["name"], sidePanel["image"]["creationTime"]]
   }
 
   returnValue: InputOutputPairs = {

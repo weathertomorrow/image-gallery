@@ -6,9 +6,9 @@ from modules.shared import Options
 
 from src.py.config import RuntimeConfig, StaticConfig, ConfigurableConfig, BaseTabConfig, GlobalConfig, SingleTabConfig, TabConfig
 
-from src.py.utils.int import strToNullableInt
-from src.py.utils.guards import isNotEmpty, isEmpty
-from src.py.utils.str import withPrefix
+from src.py.modules.shared.int import strToNullableInt
+from src.py.modules.shared.guards import isNotEmpty, isEmpty
+from src.py.modules.shared.str import withPrefix
 
 def getRuntimeConfig(opts: Options, staticConfig: StaticConfig, defaultConfig: ConfigurableConfig) -> RuntimeConfig:
   configAsDict = cast(RuntimeConfig, { key: opts.__getattr__(getConfigFieldId(staticConfig, key)) for key in defaultConfig.keys() })
@@ -16,6 +16,7 @@ def getRuntimeConfig(opts: Options, staticConfig: StaticConfig, defaultConfig: C
   # ¯\_(ツ)_/¯
   configAsDict["pageColumns"] = int(configAsDict["pageColumns"])
   configAsDict["pageRows"] = int(configAsDict["pageRows"])
+  configAsDict["preloadPages"] = int(configAsDict["preloadPages"])
 
   return cast(RuntimeConfig, configAsDict)
 
@@ -62,14 +63,17 @@ def makeGetBuiltinTabPath(config: StaticConfig) -> PathGetter:
 
   return getBuiltinTabPath
 
-def makeGenerateTabConfig(limits: TabSizeLimits, pathGetter: PathGetter):
+def makeGenerateTabConfig(globalConfig: GlobalConfig, pathGetter: PathGetter):
+  limits = getTabLimits(globalConfig["runtimeConfig"])
+
   def generateTabConfig(tabName: str) -> BaseTabConfig:
     tabId = getTabId(tabName)
     return {
       "displayName": tabName,
       "id": tabId,
       "maxSize": limits[tabId] if tabId in limits else None,
-      "path": pathGetter(tabName, tabId)
+      "path": pathGetter(tabName, tabId),
+      "thumbnailsPath": pathGetter(tabName, tabId) + globalConfig["staticConfig"]["thumbnails"]["folderSuffix"]
     }
 
   return generateTabConfig
@@ -86,7 +90,7 @@ def makeExpandTabConfig(globalConfig: GlobalConfig):
 def getTabConfigs(globalConfig: GlobalConfig, tabs: List[str], pathGetter: PathGetter) -> List[SingleTabConfig]:
   return list(
     map(makeExpandTabConfig(globalConfig),
-      map(makeGenerateTabConfig(getTabLimits(globalConfig["runtimeConfig"]), pathGetter), tabs)
+      map(makeGenerateTabConfig(globalConfig, pathGetter), tabs)
     )
   )
 

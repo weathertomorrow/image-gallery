@@ -10,9 +10,13 @@ export type ParsedImage = Readonly<{
 const toLocalImagePath = (imgPath: string): string => `file=${imgPath}`
 
 export const extractImageSrcs = (element: Element): ParsedImage[] => {
+  if (isEmpty(element.innerHTML)) {
+    return []
+  }
+
   const parsedJson = JSON.parse(element.innerHTML)
   const data = isArray(parsedJson) ? parsedJson.filter(negate(isEmpty)) : parsedJson
-
+  console.log(data)
   if (isArrayOf(data, isImagePathData)) {
     return data.map((image) => ({
       image: toLocalImagePath(image.image),
@@ -88,11 +92,11 @@ export const makeUpdateImages = (
   return true
 }
 
-export type PreloadImages = (root: Element, imageSrcs: ParsedImage[]) => void
-export const makePreloadImages = (): PreloadImages => {
+export type PreloadImages = (imageSrcs: ParsedImage[]) => void
+export const makePreloadImages = (root: Element): PreloadImages => {
   const alreadyPreloaded = new Map<string, null>()
 
-  return (root: Element, imageSrcs: ParsedImage[]): void => {
+  return (imageSrcs: ParsedImage[]): void => {
     imageSrcs.forEach((imageSrc) => {
       if (alreadyPreloaded.has(imageSrc.image)) {
         return

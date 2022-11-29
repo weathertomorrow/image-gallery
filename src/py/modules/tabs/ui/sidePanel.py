@@ -2,9 +2,9 @@ import gradio
 from typing import TypedDict
 
 from src.py.config import TabConfig, SingleTabConfig
+from src.py.modules.shared.str import withPrefix
 
-from src.py.utils.tabs import getTabElementId
-from src.py.utils.str import withPrefix
+from src.py.modules.tabs.logic.tabs import getTabElementId
 
 class Buttons(TypedDict):
   deselect: gradio.Button
@@ -22,7 +22,7 @@ class SidePanel(TypedDict):
 
 def makeCreateMoveToButton(tabCofig: TabConfig):
   def createMoveToButton(otherTab: SingleTabConfig) -> tuple[SingleTabConfig, gradio.Button]:
-    buttonId = getTabElementId(withPrefix(otherTab["id"], tabCofig["staticConfig"]["suffixes"]["moveToButton"]), tabCofig)
+    buttonId = getTabElementId(withPrefix(otherTab["id"], tabCofig["staticConfig"]["elementsSuffixes"]["moveToButton"]), tabCofig)
     return (otherTab, gradio.Button(elem_id = buttonId, value = f'Move to {otherTab["displayName"]}'))
 
   return createMoveToButton

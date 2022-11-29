@@ -1,19 +1,12 @@
-from os import DirEntry
-from typing import Union, TypedDict, Callable
+from typing import TypedDict, Callable
 
 from src.py.config import SortBy, SortOrder
+from src.py.modules.shared.mutable import MUTABLE_ImagesInDirRef
 
 # importing types in python can cause dependecy cycles
 
-ImagesInDir = list[DirEntry[str]]
-ImageSortingKey = Callable[[DirEntry[str]],  Union[str, float]]
 GetImages = Callable[[float, SortOrder, SortBy], list[str]]
 PostProcess = Callable[[list[str]], str]
-
-class MUTABLE_ImagesInDirRef(TypedDict):
-  images: ImagesInDir
-  prevSortBy: Union[SortBy, None]
-  prevSortOrder: Union[SortOrder, None]
 
 PageChangingFNOutput = tuple[
   int, # current page index

@@ -19,9 +19,10 @@ export const initTab = (config: TabConfig): void => {
     return
   }
 
-  const observers = setupObservers(config, elements)
   const gridDimensions = withEffect(extractGridDimensions(elements.buttons.images ?? []), updateGridCssVariables)
   const imagesPerPage = gridDimensions.columns * gridDimensions.rows
+
+  const observers = setupObservers(config, elements)
   const images = insertImagesIntoButtons(extractImageSrcs(elements.imageSrcs.main), elements.buttons.images)
 
   const refresh = makeEmitClick(elements.buttons.refresh)
@@ -36,6 +37,6 @@ export const initTab = (config: TabConfig): void => {
 
   observers.progressBarObserver(refresh)
   observers.mainPageSource(makeUpdateImages(aggregatedLoadListener), resetLoadingPrevPage, images)
-  observers.preloadedPagesSources(makePreloadImages())
+  observers.preloadedPagesSources(makePreloadImages(config.preloadRoot))
   elements.buttons.moveToThisTab.forEach(makeHTMLEventListener(refresh))
 }

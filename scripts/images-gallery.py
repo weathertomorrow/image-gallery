@@ -4,20 +4,24 @@ from modules.script_callbacks import on_ui_settings, on_ui_tabs
 from modules.shared import opts, OptionInfo
 
 from src.py.config import defaultConfigurableConfig, staticConfig, uiLabelsConfig
-from src.py.utils.str import withSuffix
-from src.py.utils.config import getRuntimeConfig, getCustomTabsConfigs, getBuiltinTabsConfig, getConfigFieldId, getGlobalConfig, mergeTabConfigs
-from src.py.tabs import createTab
+from src.py.modules.shared.str import withSuffix
+from src.py.modules.shared.config import getConfigFieldId, getGlobalConfig, getRuntimeConfig, getBuiltinTabsConfig, getCustomTabsConfigs, mergeTabConfigs
+
+from src.py.modules.tabs.tabs import createTab
+from src.py.modules.thumbnails.thumbnails import hadleMissingThumbnails
 
 def setup_tabs():
   globalConfig = getGlobalConfig(getRuntimeConfig(opts, staticConfig, defaultConfigurableConfig), staticConfig)
   defaultTabConfigs = getBuiltinTabsConfig(globalConfig)
   customTabConfigs = getCustomTabsConfigs(globalConfig)
 
-  # merge configs to avoid duplicates
   tabs = mergeTabConfigs(defaultTabConfigs, customTabConfigs)
 
   with gradio.Blocks(analytics_enabled = False) as gallery:
-    with gradio.Tabs(elem_id = withSuffix(staticConfig["extensionId"], staticConfig["suffixes"]["extensionTab"])):
+    if globalConfig["runtimeConfig"]["useThumbnails"]:
+      hadleMissingThumbnails(tabs)
+
+    with gradio.Tabs(elem_id = withSuffix(staticConfig["extensionId"], staticConfig["elementsSuffixes"]["extensionTab"])):
       for tab in tabs:
         createTab(tab)
 
@@ -28,7 +32,6 @@ def setup_options():
 
   for key in defaultConfigurableConfig.keys():
     opts.add_option(getConfigFieldId(staticConfig, key), OptionInfo(*defaultConfigurableConfig[key], section = section))
-
 
 # calling code
 on_ui_settings(setup_options)

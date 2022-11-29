@@ -1,8 +1,14 @@
-from src.py.config import StaticConfig, TabConfig, SortBy, SortOrder
-from src.py.logic.types import MUTABLE_ImagesInDirRef
+from typing import Union, TypedDict, Callable
 
-from src.py.logic.sort import getSortParam, sortImages
-from src.py.logic.files import ImagesInDir, getImagesInDir
+from src.py.config import StaticConfig, TabConfig, SortBy, SortOrder
+
+from src.py.modules.shared.sort import getSortParam, sortImages
+from src.py.modules.shared.files import ImagesInDir, getImagesInDir
+
+class MUTABLE_ImagesInDirRef(TypedDict):
+  images: ImagesInDir
+  prevSortBy: Union[SortBy, None]
+  prevSortOrder: Union[SortOrder, None]
 
 def getImagesInDirRef(tabConfig: TabConfig, staticConfig: StaticConfig, dirPath: str) -> MUTABLE_ImagesInDirRef:
   sortBy = tabConfig["staticConfig"]["tabDefaults"]["sortBy"]

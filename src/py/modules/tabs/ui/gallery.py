@@ -2,9 +2,9 @@ import gradio
 from typing import TypedDict, List, Callable
 
 from src.py.config import TabConfig, SortBy, SortOrder
+from src.py.modules.shared.str import withPrefix
 
-from src.py.utils.tabs import getTabElementId
-from src.py.utils.str import withPrefix
+from src.py.modules.tabs.logic.tabs import getTabElementId
 
 class Navigation(TypedDict):
   firstPage: gradio.Button
@@ -33,7 +33,7 @@ class Gallery(TypedDict):
 
 
 def makeCreateButton(tabConfig: TabConfig):
-  suffixes = tabConfig["staticConfig"]["suffixes"]
+  suffixes = tabConfig["staticConfig"]["elementsSuffixes"]
 
   def createButton(column: int, row: int):
     button = gradio.Button(value = "", elem_id = getTabElementId(withPrefix(f'{column}_{row}', suffixes["imgButton"]), tabConfig))
@@ -44,7 +44,7 @@ def makeCreateButton(tabConfig: TabConfig):
 GetImagesPage = Callable[[int], str]
 def createSrcContainers(tabConfig: TabConfig, getImagesPage: GetImagesPage) -> List[gradio.HTML]:
   preloadPagesAmount = tabConfig["runtimeConfig"]["preloadPages"]
-  suffixes = tabConfig["staticConfig"]["suffixes"]
+  suffixes = tabConfig["staticConfig"]["elementsSuffixes"]
 
   return [
     gradio.HTML(
@@ -62,13 +62,14 @@ class CreateGalleryArg(TypedDict):
 def createGallery(arg: CreateGalleryArg) -> Gallery:
   tabConfig = arg["tabConfig"]
   staticConfig = tabConfig["staticConfig"]
-  suffixes = staticConfig["suffixes"]
+  suffixes = staticConfig["elementsSuffixes"]
 
   with gradio.Column(scale = 2):
-    hiddenImagesSrcContainers = createSrcContainers(tabConfig, arg["getImagesPage"])
-    hiddenSelectedImage = gradio.Image(visible = False, type = "pil")
-    hiddenRefreshButton = gradio.Button(visible = False, elem_id = getTabElementId(tabConfig["staticConfig"]["suffixes"]["hiddenRefreshButton"], tabConfig))
-    hiddenRefreshCounter = gradio.Number(visible = False, value = 0)
+    with gradio.Row(visible = False):
+      hiddenImagesSrcContainers = createSrcContainers(tabConfig, arg["getImagesPage"])
+      hiddenSelectedImage = gradio.Image(visible = False, type = "pil")
+      hiddenRefreshButton = gradio.Button(visible = False, elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["hiddenRefreshButton"], tabConfig))
+      hiddenRefreshCounter = gradio.Number(visible = False, value = 0)
 
     createButton = makeCreateButton(tabConfig)
 

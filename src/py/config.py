@@ -22,6 +22,7 @@ class RuntimeConfig(TypedDict):
   tabs: str
   maxTabsSizes: str
   preloadPages: int
+  useThumbnails: bool
 
 class ConfigurableConfig(TypedDict):
   pageColumns: ConfigField[int]
@@ -30,9 +31,11 @@ class ConfigurableConfig(TypedDict):
   tabs: ConfigField[str]
   maxTabsSizes: ConfigField[str]
   preloadPages: ConfigField[int]
+  useThumbnails: ConfigField[bool]
 
 defaultConfigurableConfig: ConfigurableConfig = {
   "root": ("outputs", "Root gallery directory (directories for custom tabs will be created in it)"),
+  "useThumbnails": (True, "Create & display thumbnails for generated images (speeds up the gallery)"),
   "pageColumns": (6, "Columns per gallery page"),
   "pageRows": (6, "Rows per gallery page"),
   "preloadPages": (2, "Amount of pages to preload in both directions"),
@@ -54,20 +57,31 @@ class TabDefaults(TypedDict):
   sortBy: SortBy
   sortOrder: SortOrder
 
+class Thumbnails(TypedDict):
+  folderSuffix: str
+  filePrefix: str
+  maxSize: int
+
 class StaticConfig(TypedDict):
   extensionId: str
-  suffixes: IdSuffixesConfigs
+  elementsSuffixes: IdSuffixesConfigs
   imageExtensions: List[str]
   builtinTabs: dict[str, str]
   scriptPath: str
   cssClassPrefix: str
   tabDefaults: TabDefaults
+  thumbnails: Thumbnails
 
 staticConfig: StaticConfig = {
   "extensionId": "images_gallery",
   "scriptPath": script_path,
   "cssClassPrefix": "image_gallery",
-  "suffixes": {
+  "thumbnails": {
+    "folderSuffix": "-gallery-thumbnails",
+    "filePrefix": "thumbnail__",
+    "maxSize": 300,
+  },
+  "elementsSuffixes": {
     "extensionTab": "extensionTab",
     "galleryTab": "galleryTab",
     "gallery": "gallery",
@@ -99,6 +113,7 @@ class BaseTabConfig(TypedDict):
   id: str
   maxSize: Union[int, None]
   path: str
+  thumbnailsPath: str
 
 class SingleTabConfig(BaseTabConfig, GlobalConfig):
   pass

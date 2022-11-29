@@ -1,7 +1,8 @@
 from os import DirEntry
+from typing import Union, Callable
 
 from src.py.config import SortOrder, SortBy
-from src.py.logic.types import ImagesInDir, ImageSortingKey
+from src.py.modules.shared.files import ImagesInDir
 
 # todo make these dynamic to allow easy SortBy extension
 def getSortOrder(radioOptValue: str) -> SortOrder:
@@ -22,6 +23,7 @@ def getSortParam(sortOrderRadioOptValue: str, sortByRadioOptValue) -> tuple[Sort
   return (getSortOrder(sortOrderRadioOptValue), getSortBy(sortByRadioOptValue))
 
 
+ImageSortingKey = Callable[[DirEntry[str]],  Union[str, float]]
 def makeImageSortingKey(sortBy: SortBy) -> ImageSortingKey:
   def imageSortingKey(image: DirEntry[str]):
     if sortBy == SortBy.DATE:

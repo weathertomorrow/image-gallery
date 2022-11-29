@@ -1,7 +1,5 @@
-from os import makedirs, path, DirEntry, scandir
+from os import makedirs, rmdir, path, DirEntry, scandir
 from typing import Union
-
-from src.py.logic.types import ImagesInDir
 
 from src.py.config import StaticConfig
 
@@ -10,6 +8,13 @@ def makeDirIfMissing(dirPath: str):
     makedirs(dirPath)
   except OSError:
     return None
+
+def removeDirIfExists(dirPath: str):
+  try:
+    rmdir(dirPath)
+  except OSError:
+    return None
+
 
 def getExtension(fileName: str) -> Union[str, None]:
   return path.splitext(fileName)[1]
@@ -20,6 +25,7 @@ def isImage(staticConfig: StaticConfig, file: DirEntry[str]) -> bool:
 def getImageFullPath(staticConfig: StaticConfig, filePath: str) -> str:
   return path.join(staticConfig["scriptPath"], filePath)
 
+ImagesInDir = list[DirEntry[str]]
 def getImagesInDir(staticConfig: StaticConfig, dirPath: str) -> ImagesInDir:
   with scandir(dirPath) as directory:
     images = []

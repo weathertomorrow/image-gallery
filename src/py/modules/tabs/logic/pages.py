@@ -1,13 +1,14 @@
 from math import ceil
 
-from src.py.logic.types import PageChangingFN, PageChangingFNConfig
-from src.py.logic.sort import getSortParam
+from src.py.modules.shared.sort import getSortParam
+
+from src.py.modules.tabs.logic.types import PageChangingFN, PageChangingFNConfig
 
 def getPageOffsets(pagesToPreload: int) -> list[int]:
   return list(range(0 - pagesToPreload, pagesToPreload + 1))
 
 def getTotalPages(config: PageChangingFNConfig) -> int:
-  return ceil(len(config['imagesInDirRef']['images']) / config["imagesPerPage"])
+  return ceil(len(config["imagesInDirRef"]["images"]) / config["imagesPerPage"])
 
 def getLastPageIndex(config: PageChangingFNConfig) -> int:
   return getTotalPages(config) - 1
