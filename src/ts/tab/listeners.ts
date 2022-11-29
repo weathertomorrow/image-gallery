@@ -1,4 +1,5 @@
 import { isNil } from 'lodash'
+import { TabConfig } from '../config'
 import { isEmpty } from './guards'
 
 export const makeImageSourcesListener = (callback: (node: Element) => void): MutationCallback => (mutation) => {
@@ -21,6 +22,20 @@ export const makeProgressBarListener = (isDone: (done: boolean) => void): Mutati
   const [{ target }] = mutation
 
   if (!isNil(target) && target instanceof Element && isEmpty(Array.from(target.children))) {
+    isDone(true)
+  } else {
+    isDone(false)
+  }
+}
+
+export const makeGenerateThumbnailsListener = (config: TabConfig, isDone: (done: boolean) => void): MutationCallback => (mutation) => {
+  if (isEmpty(mutation)) {
+    return
+  }
+
+  const [{ target }] = mutation
+
+  if (!isNil(target) && target instanceof Element && target.classList.contains(config.gradioHiddenElementCSSClass)) {
     isDone(true)
   } else {
     isDone(false)

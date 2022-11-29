@@ -11,6 +11,7 @@ import { extractGridDimensions, updateGridCssVariables } from './grid'
 import { makeHTMLEventListener, makeImageLoadListener } from './listeners'
 import { makeEmitClick } from './eventEmitters'
 import { extractImageSrcs, insertImagesIntoButtons, makeUpdateImages, makeChangeImagesVisiblity, makePreloadImages } from './images'
+import { makeShowLoading } from './utils'
 
 export const initTab = (config: TabConfig): void => {
   const elements = getElements(config)
@@ -35,8 +36,11 @@ export const initTab = (config: TabConfig): void => {
     onReset: hideImages
   })
 
-  observers.progressBarObserver(refresh)
   observers.mainPageSource(makeUpdateImages(aggregatedLoadListener), resetLoadingPrevPage, images)
   observers.preloadedPagesSources(makePreloadImages(config.preloadRoot))
+  observers.progressBarObserver(refresh)
+  observers.generateThumbnailsObserver(refresh)
+
   elements.buttons.moveToThisTab.forEach(makeHTMLEventListener(refresh))
+  elements.buttons.generateThumbnails?.addEventListener('click', makeShowLoading(config, elements.buttons.generateThumbnails))
 }

@@ -16,7 +16,7 @@ export const extractImageSrcs = (element: Element): ParsedImage[] => {
 
   const parsedJson = JSON.parse(element.innerHTML)
   const data = isArray(parsedJson) ? parsedJson.filter(negate(isEmpty)) : parsedJson
-  console.log(data)
+
   if (isArrayOf(data, isImagePathData)) {
     return data.map((image) => ({
       image: toLocalImagePath(image.image),

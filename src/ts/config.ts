@@ -1,5 +1,6 @@
 const staticConfig = {
   gradioAppTag: 'gradio-app',
+  gradioHiddenElementCSSClass: '!hidden',
   extensionId: 'images_gallery',
   cssClassPrefix: 'image_gallery',
   debounceMs: 200,
@@ -11,7 +12,10 @@ const staticConfig = {
     imgButton: 'imgButton',
     moveToButton: 'moveToButton',
     hiddenRefreshButton: 'hiddenRefreshButton',
-    progressBar: 'progressbar'
+    progressBar: 'progressbar',
+    generateThumbnailsButton: 'generateThumbnailsButton',
+    generateThumbnailsContainer: 'generateThumbnailsContainer',
+    spinner: 'spinner'
   }
 } as const
 

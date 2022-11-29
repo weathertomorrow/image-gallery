@@ -51,6 +51,8 @@ class IdSuffixesConfigs(TypedDict):
   imgButton: str
   moveToButton: str
   hiddenRefreshButton: str
+  generateThumbnailsButton: str
+  generateThumbnailsContainer: str
 
 class TabDefaults(TypedDict):
   pageIndex: int
@@ -89,6 +91,8 @@ staticConfig: StaticConfig = {
     "imgButton": "imgButton",
     "moveToButton": "moveToButton",
     "hiddenRefreshButton": "hiddenRefreshButton",
+    "generateThumbnailsButton": "generateThumbnailsButton",
+    "generateThumbnailsContainer": "generateThumbnailsContainer"
   },
   "tabDefaults": {
     "pageIndex": 0,

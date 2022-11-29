@@ -9,6 +9,7 @@ import { isNotNil } from './guards'
 
 export type TabElements = Readonly<{
   progressBar: Nullable<Element>
+  generateMissingThumbnailsContainer: Nullable<Element>
   imageSrcs: {
     prev: Element[]
     main: Element
@@ -18,6 +19,7 @@ export type TabElements = Readonly<{
     refresh: HTMLButtonElement
     images: HTMLButtonElement[]
     moveToThisTab: HTMLButtonElement[]
+    generateThumbnails: Nullable<HTMLButtonElement>
   }
 }>
 
@@ -79,11 +81,21 @@ const getProgressBar = (config: TabConfig): Nullable<Element> => {
   return config.appRoot.querySelector(id)?.querySelector(id)
 }
 
+const getGenerateMissingThumbnailsButton = (config: TabConfig): Nullable<HTMLButtonElement> => {
+  return config.appRoot.querySelector<HTMLButtonElement>(`#${withPrefix(config.suffixes.generateThumbnailsButton, config.extensionId)}`)
+}
+
+const getGenerateMissingThumbnailsContainer = (config: TabConfig): Nullable<HTMLButtonElement> => {
+  return config.appRoot.querySelector<HTMLButtonElement>(`#${withPrefix(config.suffixes.generateThumbnailsContainer, config.extensionId)}`)
+}
+
 const getElements = (config: TabConfig): Nullable<TabElements> => {
   const imageButtons = getImageButtons(config)
   const refreshButton = getRefreshButton(config)
   const moveToThisTabButtons = getMoveToThisTabButtons(config)
   const progressBar = getProgressBar(config)
+  const generateThumbnailsButton = getGenerateMissingThumbnailsButton(config)
+  const generateThumbnailsContainer = getGenerateMissingThumbnailsContainer(config)
 
   const imageSrcs = getImageSrcs(config)
 
@@ -92,7 +104,13 @@ const getElements = (config: TabConfig): Nullable<TabElements> => {
   }
 
   return {
-    buttons: { images: imageButtons, refresh: refreshButton, moveToThisTab: moveToThisTabButtons },
+    buttons: {
+      images: imageButtons,
+      refresh: refreshButton,
+      moveToThisTab: moveToThisTabButtons,
+      generateThumbnails: generateThumbnailsButton
+    },
+    generateMissingThumbnailsContainer: generateThumbnailsContainer,
     imageSrcs,
     progressBar
   }
