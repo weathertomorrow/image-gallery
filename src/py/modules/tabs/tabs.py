@@ -61,7 +61,7 @@ def createTab(tabConfig: TabConfig) -> CreateTabReturnValue:
   gallery["sort"]["by"].change(makeGoToFirstPage(changePageConfig), **inputsAndOutputs["navigation"])
   gallery["sort"]["order"].change(makeGoToFirstPage(changePageConfig), **inputsAndOutputs["navigation"])
 
-  gallery["hidden"]["refreshButton"].click(withRefreshFiles(makeGoToPageAtIndex(changePageConfig)), **inputsAndOutputs["hiddenRefreshButton"])
+  gallery["refreshButton"].click(withRefreshFiles(makeGoToPageAtIndex(changePageConfig)), **inputsAndOutputs["hiddenRefreshButton"])
   gallery["hidden"]["refreshCounter"].change(withRefreshFiles(makeRefreshPageForCounter(changePageConfig)), **inputsAndOutputs["hiddenRefreshCounter"])
 
   for (row, buttonRow) in enumerate(gallery["buttons"]):
@@ -70,7 +70,7 @@ def createTab(tabConfig: TabConfig) -> CreateTabReturnValue:
   gallery["hidden"]["selectedImage"].change(onImageChange, **inputsAndOutputs["selectedImage"])
 
   for (otherTab, moveToOtherTabButton) in sidePanel["buttons"]["moveTo"]:
-    moveToOtherTabButton.click(makeMoveImage(otherTab), **inputsAndOutputs["moveToTabButton"])
+    moveToOtherTabButton.click(makeMoveImage(otherTab, allImagesInDirRef), **inputsAndOutputs["moveToTabButton"])
   sidePanel["buttons"]["deselect"].click(deselectImage, **inputsAndOutputs["deselectButton"])
 
   return {

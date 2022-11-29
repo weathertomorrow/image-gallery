@@ -11,7 +11,7 @@ const staticConfig = {
     imgSrcs: 'imgSrcs',
     imgButton: 'imgButton',
     moveToButton: 'moveToButton',
-    hiddenRefreshButton: 'hiddenRefreshButton',
+    refreshButton: 'refreshButton',
     progressBar: 'progressbar',
     generateThumbnailsButton: 'generateThumbnailsButton',
     generateThumbnailsContainer: 'generateThumbnailsContainer',

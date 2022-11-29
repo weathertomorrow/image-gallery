@@ -1,16 +1,16 @@
 import gradio
 from os import stat
-from shutil import move
 from typing import Callable, Union, TypedDict, List, cast
 from time import strftime, localtime
 
 from modules.extras import run_pnginfo
 
 from src.py.config import TabConfig, SingleTabConfig
+from src.py.modules.shared.mutable import MUTABLE_ImagesInDirRef
+from src.py.modules.shared.files import getFilenameFromPath, moveFileAndPreventDuplicates
 
 from src.py.modules.tabs.ui.gallery import Gallery
 from src.py.modules.tabs.ui.sidePanel import SidePanel
-
 from src.py.modules.tabs.logic.images import dataIntoImages
 
 def formatImageTime(time: float) -> str:
@@ -34,10 +34,23 @@ def onImageChange(image: Union[gradio.Pil, None]):
 def deselectImage():
   return None
 
-def makeMoveImage(targetTab: SingleTabConfig):
+def makeMoveImage(targetTab: SingleTabConfig, imagesInDir: MUTABLE_ImagesInDirRef):
   # these are here because files need to be refreshed afterwards
   def moveImage(sortOrder: str, sortBy: str, image: str, counter: float):
-    move(image, targetTab["path"])
+    moveFileAndPreventDuplicates(image, targetTab["path"])
+    imageName = getFilenameFromPath(image)
+
+    imageThumbnail = (
+        imagesInDir["thumbnails"][imageName]
+      if
+        targetTab["runtimeConfig"]["useThumbnails"] and imageName in imagesInDir["thumbnails"]
+      else
+        None
+    )
+
+    if imageThumbnail is not None:
+        moveFileAndPreventDuplicates(imageThumbnail, targetTab["thumbnailsPath"])
+
     return (None, 0 if int(counter) == 1 else 1)
 
   return moveImage

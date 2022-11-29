@@ -11,7 +11,7 @@ def getTotalPages(config: PageChangingFNConfig) -> int:
   return ceil(len(config["imagesInDirRef"]["images"]) / config["imagesPerPage"])
 
 def getLastPageIndex(config: PageChangingFNConfig) -> int:
-  return getTotalPages(config) - 1
+  return max(getTotalPages(config) - 1, 0)
 
 def getEmptyPages(config: PageChangingFNConfig) -> list[str]:
   return list(map(lambda x: '', config["pageOffsets"]))

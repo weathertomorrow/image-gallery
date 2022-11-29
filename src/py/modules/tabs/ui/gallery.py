@@ -21,16 +21,15 @@ class Sort(TypedDict):
 class HiddenElements(TypedDict):
   imagesSrcContainers: List[gradio.HTML]
   selectedImage: gradio.Image
-  refreshButton: gradio.Button #for refreshing files due to interaction outside of the tab
   refreshCounter: gradio.Number #for refreshing files due to interaction inside of the tab
 
 class Gallery(TypedDict):
   navigation: Navigation
   sort: Sort
   gallery: gradio.Box
+  refreshButton: gradio.Button
   buttons: List[List[gradio.Button]]
   hidden: HiddenElements
-
 
 def makeCreateButton(tabConfig: TabConfig):
   suffixes = tabConfig["staticConfig"]["elementsSuffixes"]
@@ -68,7 +67,6 @@ def createGallery(arg: CreateGalleryArg) -> Gallery:
     with gradio.Row(visible = False):
       hiddenImagesSrcContainers = createSrcContainers(tabConfig, arg["getImagesPage"])
       hiddenSelectedImage = gradio.Image(visible = False, type = "pil")
-      hiddenRefreshButton = gradio.Button(visible = False, elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["hiddenRefreshButton"], tabConfig))
       hiddenRefreshCounter = gradio.Number(visible = False, value = 0)
 
     createButton = makeCreateButton(tabConfig)
@@ -77,6 +75,7 @@ def createGallery(arg: CreateGalleryArg) -> Gallery:
       sortBy = gradio.Radio(value = tabConfig["staticConfig"]["tabDefaults"]["sortBy"].value, choices = [opt.value for opt in SortBy] , label = "sort by", interactive = True)
       sortOrder = gradio.Radio(value = tabConfig["staticConfig"]["tabDefaults"]["sortOrder"].value, choices = [opt.value for opt in SortOrder], label = "sort order", interactive = True)
       searchBox = gradio.Textbox(label = "search by name")
+      refreshButton = gradio.Button("Refresh", elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["refreshButton"], tabConfig))
 
     with gradio.Row():
       firstPage = gradio.Button('First Page')
@@ -106,12 +105,12 @@ def createGallery(arg: CreateGalleryArg) -> Gallery:
       "nextPage": nextPage,
       "lastPage": lastPage,
     },
+    "refreshButton": refreshButton,
     "gallery": gallery,
     "buttons": buttons,
     "hidden": {
       "imagesSrcContainers": hiddenImagesSrcContainers,
       "selectedImage": hiddenSelectedImage,
-      "refreshButton": hiddenRefreshButton,
       "refreshCounter": hiddenRefreshCounter,
     },
     "sort": {

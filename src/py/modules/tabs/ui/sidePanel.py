@@ -43,7 +43,7 @@ def createSidePanel(tabConfig: TabConfig) -> SidePanel:
       imgPrompts = gradio.Textbox(label = "Generated Info", interactive = False, lines = 6)
       imgName = gradio.Textbox(label = "File Name", interactive = False, lines = 2)
       imgTime = gradio.HTML()
-    with gradio.Column():
+    with gradio.Column(elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["sidePanelButtonsContainer"], tabConfig)):
       with gradio.Row():
         sendTo = {
           tab["id"]: createSendToButton(tab) for tab in sortSendToTabs([tabConfig, *tabConfig["otherTabs"]]) if tab["sendToEnabled"]

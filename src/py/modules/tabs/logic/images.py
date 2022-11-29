@@ -15,12 +15,16 @@ def getImagesPerPage(tabConfig: TabConfig) -> int:
   return tabConfig["runtimeConfig"]["pageRows"] * tabConfig["runtimeConfig"]["pageColumns"]
 
 def makeGetImageOnPage(tabConfig: TabConfig, imagesInDir: MUTABLE_ImagesInDirRef):
-  thumbnailsEnabled = tabConfig["runtimeConfig"]["useThumbnails"] and imagesInDir["thumbnails"] is not None
-  thumbnails = imagesInDir["thumbnails"] if imagesInDir["thumbnails"] is not None else {}
+  thumbnailsEnabled = tabConfig["runtimeConfig"]["useThumbnails"]
 
   def getImageOnPage(image: DirEntry[str]) -> ImageOnPage:
-
-    thumbnailPath = thumbnails[image.name] if thumbnailsEnabled and image.name in thumbnails else None
+    thumbnailPath = (
+      imagesInDir["thumbnails"][image.name]
+      if
+        thumbnailsEnabled and image.name in imagesInDir["thumbnails"]
+      else
+      None
+    )
 
     return {
       "imagePath": getImageFullPath(tabConfig["staticConfig"], image.path),

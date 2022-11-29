@@ -67,7 +67,7 @@ const getMoveToThisTabButtons = (config: TabConfig): HTMLButtonElement[] => {
 }
 
 const getRefreshButton = (config: TabConfig): Nullable<HTMLButtonElement> => {
-  return config.tabRoot.querySelector<HTMLButtonElement>(tabElementQueryString(config, 'hiddenRefreshButton'))
+  return config.tabRoot.querySelector<HTMLButtonElement>(tabElementQueryString(config, 'refreshButton'))
 }
 
 const getImageButtons = (config: TabConfig): HTMLButtonElement[] => {

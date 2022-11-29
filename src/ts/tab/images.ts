@@ -72,12 +72,8 @@ export type UpdateImages = (newImagesSources: ParsedImage[], images: ImagesEleme
 export const makeUpdateImages = (
   listener: (imageIndex: number) => void
 ): UpdateImages => async (newImagesSources, images) => {
-  if (isEmpty(newImagesSources)) {
-    return false
-  }
-
   images.forEach((image, i) => {
-    const source = newImagesSources[i].thumbnail ?? newImagesSources[i].image
+    const source = newImagesSources[i]?.thumbnail ?? newImagesSources[i]?.image
 
     if (!isNil(source)) {
       markImageAsNormal(image)

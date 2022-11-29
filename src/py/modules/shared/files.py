@@ -1,4 +1,5 @@
-from os import makedirs, path, DirEntry, scandir
+from os import makedirs, path, DirEntry, scandir, remove
+from shutil import move, Error
 from ntpath import basename
 from shutil import rmtree
 from typing import Union
@@ -43,6 +44,14 @@ def imageBelongsToTab(tab: TabConfig, imagePath: str):
   common = path.commonpath([tab["path"], imagePath])
   return not isEmpty(common) and path.samefile(common, tab["path"])
 
-
 def getFilenameFromPath(path: str):
   return basename(path)
+
+def moveFileAndPreventDuplicates(filePath: str, desination: str):
+  try:
+    move(filePath, desination)
+  except (Error) as e:
+    if ("already exists" in e.strerror):
+      remove(filePath)
+    else:
+      raise e

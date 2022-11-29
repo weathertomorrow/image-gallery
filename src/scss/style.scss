@@ -41,7 +41,6 @@
 }
 
 [id$=gallery_images_gallery] {
-
   overflow: visible !important;
   padding: 0;
   width: 100%;
@@ -97,4 +96,12 @@
   width: 100%;
 
   z-index: 2;
+}
+
+[id$=refreshButton_images_gallery] {
+  max-width: max-content;
+}
+
+[id$=sidePanelButtonsContainer_images_gallery] {
+  justify-content: flex-end;
 }

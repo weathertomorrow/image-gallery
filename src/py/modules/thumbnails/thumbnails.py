@@ -7,14 +7,14 @@ from src.py.modules.shared.str import getExtensionElementId
 
 from src.py.modules.thumbnails.logic.threads import  THREAD_generateThumbnails, THREAD_getImagesWithMissingThumbnails, splitThreadOutputsEvenly
 from src.py.modules.thumbnails.logic.checks import isMissingThumbnails
-from src.py.modules.thumbnails.logic.types import MUTABLE_getImagesWithMisisngThumbnailsOutputs
+from src.py.modules.thumbnails.logic.types import MUTABLE_getImagesWithMissisngThumbnailsOutputs
 
 htmlInfoMessage = {
   "missingThumbnails": '<p style="text-align: center; color: red">Some thumbnails are missing</p>',
   "generatingThumbnails": '<p style="text-align: center;">Thumbnails are being generated (make take a while)…</br>You can use the gallery normally</p>'
 }
 
-def makeGenerateThumbnails(tabConfigs: list[TabConfig], outputsFromTabs: MUTABLE_getImagesWithMisisngThumbnailsOutputs):
+def makeGenerateThumbnails(tabConfigs: list[TabConfig], outputsFromTabs: MUTABLE_getImagesWithMissisngThumbnailsOutputs):
   def generateThumbnails(_: float):
     threads: list[Thread]  = []
     threadOutputs = outputsFromTabs
@@ -39,7 +39,7 @@ def onButtonClick():
 def hadleMissingThumbnails(tabsConfigs: list[TabConfig]):
   staticConfig = tabsConfigs[0]["staticConfig"]
 
-  threadOutputs: MUTABLE_getImagesWithMisisngThumbnailsOutputs = {
+  threadOutputs: MUTABLE_getImagesWithMissisngThumbnailsOutputs = {
     tabConfig["id"]: { "output": []}  for tabConfig in tabsConfigs
   }
 

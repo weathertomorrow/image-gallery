@@ -50,7 +50,8 @@ class IdSuffixesConfigs(TypedDict):
   imgSrcs: str
   imgButton: str
   moveToButton: str
-  hiddenRefreshButton: str
+  refreshButton: str
+  sidePanelButtonsContainer: str
   generateThumbnailsButton: str
   generateThumbnailsContainer: str
 
@@ -95,9 +96,10 @@ staticConfig: StaticConfig = {
     "imgSrcs": "imgSrcs",
     "imgButton": "imgButton",
     "moveToButton": "moveToButton",
-    "hiddenRefreshButton": "hiddenRefreshButton",
+    "refreshButton": "refreshButton",
     "generateThumbnailsButton": "generateThumbnailsButton",
-    "generateThumbnailsContainer": "generateThumbnailsContainer"
+    "generateThumbnailsContainer": "generateThumbnailsContainer",
+    "sidePanelButtonsContainer": "sidePanelButtonsContainer",
   },
   "tabDefaults": {
     "pageIndex": 0,

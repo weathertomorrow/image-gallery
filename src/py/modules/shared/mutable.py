@@ -5,7 +5,7 @@ from src.py.modules.shared.sort import getSortParam, sortImages
 from src.py.modules.shared.files import ImagesInDir, getImagesInDir
 from src.py.modules.shared.names import getImageNameFromThumbnailName
 
-Thumbnails = Union[None, dict[str, str]]
+Thumbnails = dict[str, str]
 
 class MUTABLE_ImagesInDirRefBase(TypedDict):
   images: ImagesInDir
@@ -39,7 +39,7 @@ def addThumbnailsToImages(imagesInDir: MUTABLE_ImagesInDirRefBase, tabConfig: Ta
   if not tabConfig["runtimeConfig"]["useThumbnails"]:
     return {
       **imagesInDir,
-      "thumbnails": None
+      "thumbnails": {}
     }
 
   return {
@@ -63,7 +63,7 @@ def makeWithRefreshFiles(ref: MUTABLE_ImagesInDirRef, tabConfig: TabConfig):
       updateImagesInDirRef(
         ref,
         sortImages(getImagesInDir(staticConfig, tabConfig["path"]), sortOrder, sortBy),
-        getThumbnailsForTab(tabConfig) if tabConfig["runtimeConfig"]["useThumbnails"] else None,
+        getThumbnailsForTab(tabConfig) if tabConfig["runtimeConfig"]["useThumbnails"] else {},
         sortOrder,
         sortBy
       )
