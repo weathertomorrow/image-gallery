@@ -1,11 +1,12 @@
-import { isEmpty, isNil } from 'lodash'
+import { first, isEmpty, isNil, last } from 'lodash'
 import { TabConfig } from '../config'
 
 import { tabElementQueryString, withPrefix, withSuffix } from '../utils/str'
-
 import { Nullable } from '../utils/types'
+import { isNotNil } from '../utils/guards'
 
-import { isNotNil } from './guards'
+export const getFirstImageInTab = (tabElements: TabElements): Nullable<HTMLButtonElement> => first(tabElements.buttons.images)
+export const getLastImageInTab = (tabElements: TabElements): Nullable<HTMLButtonElement> => last(tabElements.buttons.images)
 
 export type TabElements = Readonly<{
   progressBar: Nullable<Element>

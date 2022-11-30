@@ -1,5 +1,5 @@
 import { StaticConfig } from '../config'
-import { isEmpty } from '../tab/guards'
+import { isEmpty } from './guards'
 
 export const withSuffix = (sufix: string, name: string): string => {
   return `${name}_${sufix}`

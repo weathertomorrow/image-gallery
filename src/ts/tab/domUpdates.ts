@@ -2,9 +2,11 @@ import { debounce, isNil } from 'lodash'
 import { TabConfig } from '../config'
 import { withPrefix } from '../utils/str'
 import { Nullable } from '../utils/types'
-import { TabElements } from './elements'
+import { getFirstImageInTab, getLastImageInTab, TabElements } from './elements'
+import { emitClick } from './eventEmitters'
 import { extractImageSrcs, getImageNameFromPath, ImagesElements, toLocalImagePath, UpdateImages } from './images'
 import { SelectedImageCallback, ImageSourcesCallback } from './listeners'
+import { getSelectedImagePath } from './utils'
 
 export const makeShowLoading = (config: TabConfig, element: Nullable<HTMLElement>) => () => {
   if (isNil(element)) {
@@ -17,7 +19,15 @@ export const makeShowLoading = (config: TabConfig, element: Nullable<HTMLElement
   element.after(loadingTag)
 }
 
-const findButtonForImage = (elements: TabElements, image: string): Nullable<HTMLElement> => {
+const scrollToElement = (element: Nullable<Element>): void => {
+  element?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+}
+
+const findButtonForImage = (elements: TabElements, image: Nullable<string>): Nullable<HTMLElement> => {
+  if (isNil(image)) {
+    return null
+  }
+
   const selectedImageName = getImageNameFromPath(image)
 
   if (isNil(selectedImageName)) {
@@ -46,7 +56,7 @@ const turnToImageBrowsing = (config: TabConfig, elements: TabElements, selectedI
     imagePreview.classList.add(withPrefix(config.css.classPrefix, config.css.classesSuffixes.selectedImage))
     elements.gallery.gallery.before(imagePreview)
 
-    findButtonForImage(elements, selectedImageSrc)?.scrollIntoView({ behavior: 'smooth' })
+    scrollToElement(findButtonForImage(elements, selectedImageSrc))
   }
 }
 
@@ -107,4 +117,24 @@ export const makeOnMainPageSourcesChanged = (
     resetLoading()
     void updateImages(extractImageSrcs(element), images)
   }, config.debounceMs)
+}
+
+export const makeClickSiblingToSelectedImage = (type: 'previous' | 'next', elements: TabElements) => () => {
+  const currentlySelected = findButtonForImage(elements, getSelectedImagePath(elements.imageSrcs.selected))
+  const sibling = currentlySelected?.[type === 'next' ? 'nextElementSibling' : 'previousElementSibling']
+
+  if (!isNil(sibling) && sibling instanceof HTMLElement) {
+    emitClick(sibling)
+    scrollToElement(sibling)
+  } else if (isNil(sibling)) {
+    if (type === 'next') {
+      const firstImage = getFirstImageInTab(elements)
+      emitClick(firstImage)
+      scrollToElement(firstImage)
+    } else {
+      const lastImage = getLastImageInTab(elements)
+      emitClick(lastImage)
+      scrollToElement(lastImage)
+    }
+  }
 }

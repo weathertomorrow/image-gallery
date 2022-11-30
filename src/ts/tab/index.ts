@@ -11,7 +11,9 @@ import { extractGridDimensions, updateGridCssVariables } from './grid'
 import { makeHTMLEventListener, makeImageLoadListener } from './listeners'
 import { makeEmitClick } from './eventEmitters'
 import { extractImageSrcs, insertImagesIntoButtons, makeUpdateImages, makeChangeImagesVisiblity, makePreloadImages } from './images'
-import { makeOnMainPageSourcesChanged, makeShowLoading, makeUpdateGalleryModes, makeUpdateSelection } from './domUpdates'
+import { makeClickSiblingToSelectedImage, makeOnMainPageSourcesChanged, makeShowLoading, makeUpdateGalleryModes, makeUpdateSelection } from './domUpdates'
+import { Keys, onKey } from '../utils/events'
+import { ifTabActive } from './utils'
 
 export const initTab = (config: TabConfig): void => {
   const elements = getElements(config)
@@ -46,4 +48,9 @@ export const initTab = (config: TabConfig): void => {
 
   elements.buttons.moveToThisTab.forEach(makeHTMLEventListener(refresh))
   elements.buttons.generateThumbnails?.addEventListener('click', makeShowLoading(config, elements.buttons.generateThumbnails))
+
+  window.addEventListener('keydown', ifTabActive(config, onKey([Keys.ArrowDown], makeClickSiblingToSelectedImage('next', elements))))
+  window.addEventListener('keydown', ifTabActive(config, onKey([Keys.ArrowUp], makeClickSiblingToSelectedImage('previous', elements))))
+  window.addEventListener('keydown', ifTabActive(config, onKey([Keys.ArrowLeft], makeEmitClick(elements.navigation.buttons.prevPage))))
+  window.addEventListener('keydown', ifTabActive(config, onKey([Keys.ArrowRight], makeEmitClick(elements.navigation.buttons.nextPage))))
 }

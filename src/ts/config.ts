@@ -33,7 +33,7 @@ const staticConfig = {
 export type RuntimeConfig = Readonly<{
   tabId: string
   appRoot: ShadowRoot
-  tabRoot: Element
+  tabRoot: HTMLElement
   preloadRoot: Element
 }>
 

@@ -1,7 +1,8 @@
 import { isNil } from 'lodash'
 import { TabConfig } from '../config'
 import { Nullable } from '../utils/types'
-import { isEmpty } from './guards'
+import { isEmpty } from '../utils/guards'
+import { getSelectedImagePath } from './utils'
 
 export type ImageSourcesCallback = (node: Element) => void
 export const makeImageSourcesListener = (callback: ImageSourcesCallback): MutationCallback => (mutation) => {
@@ -57,7 +58,7 @@ export const makeSelectedImageListener = (onChange: SelectedImageCallback): Muta
     const [{ target }] = mutation
 
     if (!isNil(target) && target instanceof HTMLTextAreaElement) {
-      const parsedValue = isEmpty(target.value) ? null : target.value
+      const parsedValue = getSelectedImagePath(target)
 
       if (prevValue !== parsedValue) {
         onChange(parsedValue)
