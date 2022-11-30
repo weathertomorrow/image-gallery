@@ -83,8 +83,12 @@
   overflow: hidden;
   cursor: pointer;
 
-  &:hover {
+  &:hover, &.image_gallery_selectedImageButton {
     border-color: #ffc270;
+  }
+
+  &.image_gallery_selectedImageButton {
+    border-width: 2px;
   }
 
   @include spinner;
@@ -106,4 +110,32 @@
 
 [id$=sidePanelButtonsContainer_images_gallery] {
   justify-content: flex-end;
+}
+
+[id$=gallery_images_gallery].image_gallery_imageSelectedMode {
+  width: max-content;
+  margin-right: auto;
+
+  & > div {
+    margin-right: auto;
+    min-height: 100%;
+    max-width: 10vw;
+  }
+
+  & > div > div {
+    grid-template-columns: 1fr;
+    min-height: 100%;
+  }
+}
+
+[id$=galleryContainer_images_gallery].image_gallery_imageSelectedMode {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.image_gallery_selectedImage {
+  max-height: 58vh;
+  object-fit: contain;
+  cursor: pointer;
+  margin-right: auto;
 }

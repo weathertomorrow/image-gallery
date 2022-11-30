@@ -24,12 +24,12 @@ def makeOnImageClick(tabConfig: TabConfig, x: int, y: int) -> ButtonClickHandler
 
   return onImageClick
 
-def onImageChange(image: Union[gradio.Pil, None]):
+def onImageChange(image: Union[gradio.Pil, None], imagePath: str):
   if image is None:
-    return ("", gradio.update(visible = False))
+    return (None, gradio.update(visible = False), None)
 
   imageInfo = run_pnginfo(image)
-  return (imageInfo[1], gradio.update(visible = True))
+  return (imageInfo[1], gradio.update(visible = True), imagePath)
 
 def deselectImage():
   return None
@@ -109,8 +109,8 @@ def getEventInputsAndOutputs(gallery: Gallery, sidePanel: SidePanel) -> UNSAFE_U
   }
 
   selectedImage: InputOutputPair = {
-    "inputs": [gallery["hidden"]["selectedImage"]],
-    "outputs": [sidePanel["image"]["prompts"], sidePanel["container"]]
+    "inputs": [gallery["hidden"]["selectedImage"], sidePanel["image"]["name"]],
+    "outputs": [sidePanel["image"]["prompts"], sidePanel["container"], sidePanel["image"]["name"]]
   }
 
   deselectButton: InputOutputPair = {

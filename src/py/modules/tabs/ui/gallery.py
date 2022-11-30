@@ -66,7 +66,7 @@ def createGallery(arg: CreateGalleryArg) -> Gallery:
   with gradio.Column(scale = 2):
     with gradio.Row(visible = False):
       hiddenImagesSrcContainers = createSrcContainers(tabConfig, arg["getImagesPage"])
-      hiddenSelectedImage = gradio.Image(visible = False, type = "pil")
+      hiddenSelectedImage = gradio.Image(visible = False, interactive = False,  type = "pil")
       hiddenRefreshCounter = gradio.Number(visible = False, value = 0)
 
     createButton = makeCreateButton(tabConfig)
@@ -84,18 +84,19 @@ def createGallery(arg: CreateGalleryArg) -> Gallery:
       nextPage = gradio.Button('Next Page')
       lastPage = gradio.Button('Last Page')
 
-    with gradio.Box(elem_id = getTabElementId(suffixes["gallery"], tabConfig)) as gallery:
-      with gradio.Box():
+    with gradio.Box(elem_id = getTabElementId(suffixes["galleryContainer"], tabConfig)):
+      with gradio.Box(elem_id = getTabElementId(suffixes["gallery"], tabConfig)) as gallery:
         with gradio.Box():
-          buttons = list(
-            map(lambda rowIndex:
-              list(
-                map(lambda columnIndex: createButton(columnIndex, rowIndex),
-                range(0, tabConfig["runtimeConfig"]["pageColumns"]))
-              ),
-              range(0, tabConfig["runtimeConfig"]["pageRows"])
+          with gradio.Box():
+            buttons = list(
+              map(lambda rowIndex:
+                list(
+                  map(lambda columnIndex: createButton(columnIndex, rowIndex),
+                  range(0, tabConfig["runtimeConfig"]["pageColumns"]))
+                ),
+                range(0, tabConfig["runtimeConfig"]["pageRows"])
+              )
             )
-          )
 
   return {
     "navigation": {

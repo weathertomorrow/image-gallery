@@ -1,5 +1,6 @@
 import { isNil } from 'lodash'
 import { TabConfig } from '../config'
+import { Nullable } from '../utils/types'
 import { isEmpty } from './guards'
 
 export const makeImageSourcesListener = (callback: (node: Element) => void): MutationCallback => (mutation) => {
@@ -39,6 +40,29 @@ export const makeGenerateThumbnailsListener = (config: TabConfig, isDone: (done:
     isDone(true)
   } else {
     isDone(false)
+  }
+}
+
+export const makeSelectedImageListener = (onChange: (path: Nullable<string>) => void): MutationCallback => {
+  let prevValue: Nullable<string> = null
+
+  return (mutation) => {
+    if (isEmpty(mutation)) {
+      return
+    }
+
+    const [{ target }] = mutation
+
+    if (!isNil(target) && target instanceof HTMLTextAreaElement) {
+      const parsedValue = isEmpty(target.value) ? null : target.value
+      console.log({ parsedValue, prevValue })
+
+      if (prevValue !== parsedValue) {
+        onChange(parsedValue)
+      }
+
+      prevValue = parsedValue
+    }
   }
 }
 

@@ -50,8 +50,10 @@ class IdSuffixesConfigs(TypedDict):
   extensionTab: str
   galleryTab: str
   gallery: str
+  galleryContainer: str
   imgSrcs: str
   imgButton: str
+  selectedImagePath: str
   moveToButton: str
   refreshButton: str
   sidePanelButtonsContainer: str
@@ -96,6 +98,7 @@ staticConfig: StaticConfig = {
     "extensionTab": "extensionTab",
     "galleryTab": "galleryTab",
     "gallery": "gallery",
+    "galleryContainer": "galleryContainer",
     "imgSrcs": "imgSrcs",
     "imgButton": "imgButton",
     "moveToButton": "moveToButton",
@@ -103,6 +106,7 @@ staticConfig: StaticConfig = {
     "generateThumbnailsButton": "generateThumbnailsButton",
     "generateThumbnailsContainer": "generateThumbnailsContainer",
     "sidePanelButtonsContainer": "sidePanelButtonsContainer",
+    "selectedImagePath": "selectedImagePath"
   },
   "tabDefaults": {
     "pageIndex": 0,

@@ -2,12 +2,21 @@ const staticConfig = {
   gradioAppTag: 'gradio-app',
   gradioHiddenElementCSSClass: '!hidden',
   extensionId: 'images_gallery',
-  cssClassPrefix: 'image_gallery',
+  css: {
+    classPrefix: 'image_gallery',
+    classesSuffixes: {
+      spinner: 'spinner',
+      imageSelectedMode: 'imageSelectedMode',
+      selectedImage: 'selectedImage',
+      selectedImageButton: 'selectedImageButton'
+    }
+  },
   debounceMs: 200,
   suffixes: {
     extensionTab: 'extensionTab',
     galleryTab: 'galleryTab',
     gallery: 'gallery',
+    galleryContainer: 'galleryContainer',
     imgSrcs: 'imgSrcs',
     imgButton: 'imgButton',
     moveToButton: 'moveToButton',
@@ -15,7 +24,7 @@ const staticConfig = {
     progressBar: 'progressbar',
     generateThumbnailsButton: 'generateThumbnailsButton',
     generateThumbnailsContainer: 'generateThumbnailsContainer',
-    spinner: 'spinner'
+    selectedImagePath: 'selectedImagePath'
   }
 } as const
 

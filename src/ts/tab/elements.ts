@@ -11,9 +11,14 @@ export type TabElements = Readonly<{
   progressBar: Nullable<Element>
   generateMissingThumbnailsContainer: Nullable<Element>
   imageSrcs: {
+    selected: HTMLTextAreaElement
     prev: Element[]
     main: Element
     next: Element[]
+  }
+  gallery: {
+    container: Element
+    gallery: Element
   }
   buttons: {
     refresh: HTMLButtonElement
@@ -23,12 +28,24 @@ export type TabElements = Readonly<{
   }
 }>
 
+const getSelectedImagePath = (config: TabConfig): Nullable<HTMLTextAreaElement> => {
+  return config.tabRoot.querySelector(tabElementQueryString(config, 'selectedImagePath'))
+    ?.querySelector('textarea')
+}
+
 const getImageSrcs = (config: TabConfig): Nullable<TabElements['imageSrcs']> => {
   const placeholder = null
+  const selectedImage = getSelectedImagePath(config)
+
+  if (isNil(selectedImage)) {
+    return null
+  }
+
   const imageSrcsAcc: TabElements['imageSrcs'] = {
     next: [],
     main: placeholder as unknown as Element,
-    prev: []
+    prev: [],
+    selected: selectedImage
   }
 
   const imageSrcs = Array.from(config.tabRoot.querySelectorAll(tabElementQueryString(config, 'imgSrcs')))
@@ -81,6 +98,14 @@ const getProgressBar = (config: TabConfig): Nullable<Element> => {
   return config.appRoot.querySelector(id)?.querySelector(id)
 }
 
+const getGallery = (config: TabConfig): Nullable<Element> => {
+  return config.tabRoot.querySelector(tabElementQueryString(config, 'gallery'))
+}
+
+const getGalleryContainer = (config: TabConfig): Nullable<Element> => {
+  return config.tabRoot.querySelector(tabElementQueryString(config, 'galleryContainer'))
+}
+
 const getGenerateMissingThumbnailsButton = (config: TabConfig): Nullable<HTMLButtonElement> => {
   return config.appRoot.querySelector<HTMLButtonElement>(`#${withPrefix(config.suffixes.generateThumbnailsButton, config.extensionId)}`)
 }
@@ -96,14 +121,19 @@ const getElements = (config: TabConfig): Nullable<TabElements> => {
   const progressBar = getProgressBar(config)
   const generateThumbnailsButton = getGenerateMissingThumbnailsButton(config)
   const generateThumbnailsContainer = getGenerateMissingThumbnailsContainer(config)
-
   const imageSrcs = getImageSrcs(config)
+  const gallery = getGallery(config)
+  const galleryContainer = getGalleryContainer(config)
 
-  if (isNil(refreshButton) || isNil(imageSrcs)) {
+  if (isNil(refreshButton) || isNil(imageSrcs) || isNil(gallery) || isNil(galleryContainer)) {
     return null
   }
 
   return {
+    gallery: {
+      gallery,
+      container: galleryContainer
+    },
     buttons: {
       images: imageButtons,
       refresh: refreshButton,

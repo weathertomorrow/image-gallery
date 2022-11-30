@@ -41,7 +41,7 @@ def createSidePanel(tabConfig: TabConfig) -> SidePanel:
   with gradio.Column(visible = False) as container:
     with gradio.Column():
       imgPrompts = gradio.Textbox(label = "Generated Info", interactive = False, lines = 6)
-      imgName = gradio.Textbox(label = "File Name", interactive = False, lines = 2)
+      imgName = gradio.Textbox(label = "File Name", interactive = False, lines = 2,  elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["selectedImagePath"], tabConfig))
       imgTime = gradio.HTML()
     with gradio.Column(elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["sidePanelButtonsContainer"], tabConfig)):
       with gradio.Row():

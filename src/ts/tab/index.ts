@@ -11,7 +11,7 @@ import { extractGridDimensions, updateGridCssVariables } from './grid'
 import { makeHTMLEventListener, makeImageLoadListener } from './listeners'
 import { makeEmitClick } from './eventEmitters'
 import { extractImageSrcs, insertImagesIntoButtons, makeUpdateImages, makeChangeImagesVisiblity, makePreloadImages } from './images'
-import { makeShowLoading } from './utils'
+import { makeShowLoading, makeUpdateGalleryModes, makeUpdateSelection } from './domUpdates'
 
 export const initTab = (config: TabConfig): void => {
   const elements = getElements(config)
@@ -37,9 +37,10 @@ export const initTab = (config: TabConfig): void => {
   })
 
   observers.mainPageSource(makeUpdateImages(aggregatedLoadListener), resetLoadingPrevPage, images)
-  observers.preloadedPagesSources(makePreloadImages(config.preloadRoot))
-  observers.progressBarObserver(refresh)
-  observers.generateThumbnailsObserver(refresh)
+  observers.preloadedPagesSources([makePreloadImages(config.preloadRoot)])
+  observers.progressBarObserver([refresh])
+  observers.generateThumbnailsObserver([refresh])
+  observers.selectedImageObserver([makeUpdateGalleryModes(config, elements), makeUpdateSelection(config, elements)])
 
   elements.buttons.moveToThisTab.forEach(makeHTMLEventListener(refresh))
   elements.buttons.generateThumbnails?.addEventListener('click', makeShowLoading(config, elements.buttons.generateThumbnails))
