@@ -3,7 +3,8 @@ import { TabConfig } from '../config'
 import { Nullable } from '../utils/types'
 import { isEmpty } from './guards'
 
-export const makeImageSourcesListener = (callback: (node: Element) => void): MutationCallback => (mutation) => {
+export type ImageSourcesCallback = (node: Element) => void
+export const makeImageSourcesListener = (callback: ImageSourcesCallback): MutationCallback => (mutation) => {
   if (isEmpty(mutation)) {
     return
   }
@@ -15,7 +16,8 @@ export const makeImageSourcesListener = (callback: (node: Element) => void): Mut
   }
 }
 
-export const makeProgressBarListener = (isDone: (done: boolean) => void): MutationCallback => (mutation) => {
+export type DoneCallback = (done: boolean) => void
+export const makeProgressBarListener = (isDone: DoneCallback): MutationCallback => (mutation) => {
   if (isEmpty(mutation)) {
     return
   }
@@ -29,7 +31,7 @@ export const makeProgressBarListener = (isDone: (done: boolean) => void): Mutati
   }
 }
 
-export const makeGenerateThumbnailsListener = (config: TabConfig, isDone: (done: boolean) => void): MutationCallback => (mutation) => {
+export const makeGenerateThumbnailsListener = (config: TabConfig, isDone: DoneCallback): MutationCallback => (mutation) => {
   if (isEmpty(mutation)) {
     return
   }
@@ -43,7 +45,8 @@ export const makeGenerateThumbnailsListener = (config: TabConfig, isDone: (done:
   }
 }
 
-export const makeSelectedImageListener = (onChange: (path: Nullable<string>) => void): MutationCallback => {
+export type SelectedImageCallback = (path: Nullable<string>) => void
+export const makeSelectedImageListener = (onChange: SelectedImageCallback): MutationCallback => {
   let prevValue: Nullable<string> = null
 
   return (mutation) => {
@@ -55,13 +58,37 @@ export const makeSelectedImageListener = (onChange: (path: Nullable<string>) => 
 
     if (!isNil(target) && target instanceof HTMLTextAreaElement) {
       const parsedValue = isEmpty(target.value) ? null : target.value
-      console.log({ parsedValue, prevValue })
 
       if (prevValue !== parsedValue) {
         onChange(parsedValue)
       }
 
       prevValue = parsedValue
+    }
+  }
+}
+
+export type PageChangeCallback = (page: number) => void
+export const makePageChangeListener = (onChange: PageChangeCallback): MutationCallback => {
+  let prevValue = 0
+
+  return (mutation) => {
+    if (isEmpty(mutation)) {
+      return
+    }
+
+    const [{ target }] = mutation
+
+    if (!isNil(target) && target instanceof Element) {
+      const pageIndex = Number(target.innerHTML)
+
+      if (Number.isFinite(pageIndex)) {
+        if (pageIndex !== prevValue) {
+          onChange(pageIndex)
+        }
+
+        prevValue = pageIndex
+      }
     }
   }
 }

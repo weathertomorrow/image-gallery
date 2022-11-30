@@ -16,6 +16,7 @@ PostProcess = Callable[[ImagesPage], str]
 
 PageChangingFNOutput = tuple[
   int, # current page index
+  int, # duplicated current page index (for whatever reason the input doesnt fire any events when the value changes, this allows frontend to observer it)
   str, # sort order
   str, # sort by,
   str, # each page of images' sources after postprocessing

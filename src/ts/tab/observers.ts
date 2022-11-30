@@ -3,25 +3,31 @@ import { TabConfig } from '../config'
 import { call, invoke } from '../utils/fn'
 import { Nullable } from '../utils/types'
 import { TabElements } from './elements'
-import { extractImageSrcs, ImagesElements, PreloadImages, UpdateImages } from './images'
-import { makeGenerateThumbnailsListener, makeImageSourcesListener, makeProgressBarListener, makeSelectedImageListener } from './listeners'
+import { extractImageSrcs, PreloadImages } from './images'
+import {
+  makeGenerateThumbnailsListener,
+  makeImageSourcesListener,
+  makeProgressBarListener,
+  makeSelectedImageListener,
+  makePageChangeListener,
+  PageChangeCallback,
+  SelectedImageCallback,
+  ImageSourcesCallback
+} from './listeners'
+
+type MultipleListeners<T> = T[]
+type OnDoneListener = () => void
 
 const makeMainPageSourceObserver = (config: TabConfig, elements: TabElements) => (
-  updateImages: UpdateImages,
-  resetLoading: () => void,
-  images: ImagesElements
+  onSrcChange: MultipleListeners<ImageSourcesCallback>
 ): MutationObserver => {
-  const observer = new MutationObserver(makeImageSourcesListener(debounce(async (element) => {
-    resetLoading()
-    void updateImages(extractImageSrcs(element), images)
-  }, config.debounceMs)))
+  const observer = new MutationObserver(makeImageSourcesListener((value) => {
+    onSrcChange.forEach(call(value))
+  }))
 
   observer.observe(elements.imageSrcs.main, { childList: true })
   return observer
 }
-
-type MultipleListeners<T> = T[]
-type DoneListener = () => void
 
 const makePreloadedPagesSourceObservers = (config: TabConfig, elements: TabElements) => (
   preloadImages: MultipleListeners<PreloadImages>
@@ -39,7 +45,7 @@ const makePreloadedPagesSourceObservers = (config: TabConfig, elements: TabEleme
 }
 
 const makeProgressBarObserver = (config: TabConfig, elements: TabElements) => (
-  onDone: MultipleListeners<DoneListener>
+  onDone: MultipleListeners<OnDoneListener>
 ): Nullable<MutationObserver> => {
   if (isNil(elements.progressBar)) {
     return null
@@ -56,7 +62,7 @@ const makeProgressBarObserver = (config: TabConfig, elements: TabElements) => (
 }
 
 const makeSelectedImageObserver = (config: TabConfig, elements: TabElements) => (
-  onChange: MultipleListeners<(imageSrc: Nullable<string>) => void>
+  onChange: MultipleListeners<SelectedImageCallback>
 ): MutationObserver => {
   const observer = new MutationObserver(makeSelectedImageListener((value) => {
     onChange.forEach(call(value))
@@ -67,7 +73,7 @@ const makeSelectedImageObserver = (config: TabConfig, elements: TabElements) => 
 }
 
 const makeGenerateThumbnailsObserver = (config: TabConfig, elements: TabElements) => (
-  onDone: MultipleListeners<DoneListener>
+  onDone: MultipleListeners<OnDoneListener>
 ): Nullable<MutationObserver> => {
   if (isNil(elements.generateMissingThumbnailsContainer)) {
     return null
@@ -84,12 +90,24 @@ const makeGenerateThumbnailsObserver = (config: TabConfig, elements: TabElements
   return observer
 }
 
+const makePageChangeObserver = (config: TabConfig, elements: TabElements) => (
+  onPageChange: MultipleListeners<PageChangeCallback>
+): MutationObserver => {
+  const observer = new MutationObserver(makePageChangeListener((index) => {
+    onPageChange.forEach(call(index))
+  }))
+
+  observer.observe(elements.navigation.index, { childList: true })
+  return observer
+}
+
 type Observers = Readonly<{
   mainPageSource: ReturnType<typeof makeMainPageSourceObserver>
   preloadedPagesSources: ReturnType<typeof makePreloadedPagesSourceObservers>
   progressBarObserver: ReturnType<typeof makeProgressBarObserver>
   generateThumbnailsObserver: ReturnType<typeof makeGenerateThumbnailsObserver>
   selectedImageObserver: ReturnType<typeof makeSelectedImageObserver>
+  pageChangeObserver: ReturnType<typeof makePageChangeObserver>
 }>
 
 const setupObservers = (config: TabConfig, elements: TabElements): Observers => {
@@ -98,7 +116,8 @@ const setupObservers = (config: TabConfig, elements: TabElements): Observers => 
     preloadedPagesSources: makePreloadedPagesSourceObservers(config, elements),
     progressBarObserver: makeProgressBarObserver(config, elements),
     generateThumbnailsObserver: makeGenerateThumbnailsObserver(config, elements),
-    selectedImageObserver: makeSelectedImageObserver(config, elements)
+    selectedImageObserver: makeSelectedImageObserver(config, elements),
+    pageChangeObserver: makePageChangeObserver(config, elements)
   }
 }
 

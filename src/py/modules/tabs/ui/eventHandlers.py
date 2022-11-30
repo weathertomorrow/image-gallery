@@ -90,17 +90,17 @@ def getEventInputsAndOutputs(gallery: Gallery, sidePanel: SidePanel) -> UNSAFE_U
 
   navigation: InputOutputPair = {
     "inputs": [*sortArgOrder, gallery["navigation"]["pageIndex"]],
-    "outputs": [gallery["navigation"]["pageIndex"], *sortArgOrder, *gallery["hidden"]["imagesSrcContainers"]]
+    "outputs": [gallery["navigation"]["pageIndex"], gallery["hidden"]["pageIndex"], *sortArgOrder, *gallery["hidden"]["imagesSrcContainers"]]
   }
 
   hiddenRefreshButton: InputOutputPair = {
     "inputs": [*sortArgOrder, gallery["navigation"]["pageIndex"]],
-    "outputs": [gallery["navigation"]["pageIndex"], *sortArgOrder, *gallery["hidden"]["imagesSrcContainers"]]
+    "outputs": [gallery["navigation"]["pageIndex"], gallery["hidden"]["pageIndex"], *sortArgOrder, *gallery["hidden"]["imagesSrcContainers"]]
   }
 
   hiddenRefreshCounter: InputOutputPair = {
     "inputs": [*sortArgOrder, gallery["navigation"]["pageIndex"], gallery["hidden"]["refreshCounter"]],
-    "outputs": [gallery["navigation"]["pageIndex"], *sortArgOrder, gallery["hidden"]["refreshCounter"], *gallery["hidden"]["imagesSrcContainers"]]
+    "outputs": [gallery["navigation"]["pageIndex"], gallery["hidden"]["pageIndex"], *sortArgOrder, gallery["hidden"]["refreshCounter"], *gallery["hidden"]["imagesSrcContainers"]]
   }
 
   moveToTab: InputOutputPair = {

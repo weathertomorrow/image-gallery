@@ -4,6 +4,9 @@ from src.py.modules.shared.sort import getSortParam
 
 from src.py.modules.tabs.logic.types import PageChangingFN, PageChangingFNConfig
 
+def duplicateIndex(index: int) -> tuple[int, int]:
+  return (index, index)
+
 def getPageOffsets(pagesToPreload: int) -> list[int]:
   return list(range(0 - pagesToPreload, pagesToPreload + 1))
 
@@ -34,8 +37,8 @@ def makeChangePage(config: PageChangingFNConfig, offset: int) -> PageChangingFN:
     index = indexInRange(config, unparsedIndex + offset)
 
     if (index == unparsedIndex):
-      return (indexInRange(config, index), *sort, *getPages(config, index, *sort))
-    return (indexInRange(config, index), *sort, *getEmptyPages(config))
+      return (*duplicateIndex(indexInRange(config, index)), *sort, *getPages(config, index, *sort))
+    return (*duplicateIndex(indexInRange(config, index)), *sort, *getEmptyPages(config))
 
   return handle
 
@@ -45,8 +48,8 @@ def makeGoToFirstPage(config: PageChangingFNConfig) -> PageChangingFN:
     index = indexInRange(config, unparsedIndex)
 
     if index == 0:
-      return (0, *sort, *getPages(config, 0, *sort))
-    return (0, *sort, *getEmptyPages(config))
+      return (*duplicateIndex(0), *sort, *getPages(config, 0, *sort))
+    return (*duplicateIndex(0), *sort, *getEmptyPages(config))
 
   return handle
 
@@ -57,8 +60,8 @@ def makeGoToLastPage(config: PageChangingFNConfig) -> PageChangingFN:
     lastPageIndex = getLastPageIndex(config)
 
     if (index == lastPageIndex):
-       return (lastPageIndex, *sort, *getPages(config, lastPageIndex, *sort))
-    return (lastPageIndex, *sort, *getEmptyPages(config))
+       return (*duplicateIndex(lastPageIndex), *sort, *getPages(config, lastPageIndex, *sort))
+    return (*duplicateIndex(lastPageIndex), *sort, *getEmptyPages(config))
 
   return handle
 
@@ -67,13 +70,13 @@ def makeGoToPageAtIndex(config: PageChangingFNConfig) -> PageChangingFN:
     sort = (sortOrder, sortBy)
     index = indexInRange(config, unparsedIndex)
 
-    return (index, *sort, *getPages(config, index, *sort))
+    return (*duplicateIndex(index), *sort, *getPages(config, index, *sort))
 
   return handle
 
 def makeRefreshPageForCounter(config: PageChangingFNConfig):
   def handle(sortOrder: str, sortBy: str, unparsedIndex: int, counter: float):
-    (index, sortOrder, sortBy, *pages) = makeGoToPageAtIndex(config)(sortOrder, sortBy, unparsedIndex)
-    return (index, sortOrder, sortBy, counter, *pages)
+    (index, _, sortOrder, sortBy, *pages) = makeGoToPageAtIndex(config)(sortOrder, sortBy, unparsedIndex)
+    return (*duplicateIndex(index), sortOrder, sortBy, counter, *pages)
 
   return handle

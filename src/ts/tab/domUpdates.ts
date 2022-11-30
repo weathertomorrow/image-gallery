@@ -1,9 +1,10 @@
-import { isNil } from 'lodash'
+import { debounce, isNil } from 'lodash'
 import { TabConfig } from '../config'
 import { withPrefix } from '../utils/str'
 import { Nullable } from '../utils/types'
 import { TabElements } from './elements'
-import { getImageNameFromPath, toLocalImagePath } from './images'
+import { extractImageSrcs, getImageNameFromPath, ImagesElements, toLocalImagePath, UpdateImages } from './images'
+import { SelectedImageCallback, ImageSourcesCallback } from './listeners'
 
 export const makeShowLoading = (config: TabConfig, element: Nullable<HTMLElement>) => () => {
   if (isNil(element)) {
@@ -44,7 +45,7 @@ const turnToTabBrowsing = (config: TabConfig, elements: TabElements): void => {
   imagePreview?.remove()
 }
 
-export const makeUpdateGalleryModes = (config: TabConfig, elements: TabElements) => (selectedImageSrc: Nullable<string>) => {
+export const makeUpdateGalleryModes = (config: TabConfig, elements: TabElements): SelectedImageCallback => (selectedImageSrc: Nullable<string>) => {
   if (isNil(selectedImageSrc)) {
     turnToTabBrowsing(config, elements)
   } else {
@@ -52,19 +53,49 @@ export const makeUpdateGalleryModes = (config: TabConfig, elements: TabElements)
   }
 }
 
-export const makeUpdateSelection = (config: TabConfig, elements: TabElements) => (selectedImageSrc: Nullable<string>) => {
-  const selectedClassName = withPrefix(config.css.classPrefix, config.css.classesSuffixes.selectedImageButton)
-  const selectedImageName = !isNil(selectedImageSrc) ? getImageNameFromPath(selectedImageSrc) : null
+type MakeUpdateSelectionReturnValue = Readonly<{
+  onImageChange: SelectedImageCallback
+  onPageChange: () => void
+}>
 
-  elements.buttons.images.forEach((imageButton) => imageButton.classList.remove(selectedClassName))
-  if (!isNil(selectedImageName)) {
-    const selectedButton = elements.buttons.images.find((buttonEl) => {
-      const src = buttonEl.querySelector('img')?.src
-      return !isNil(src) && decodeURIComponent(src).includes(selectedImageName)
-    })
+export const makeUpdateSelection = (config: TabConfig, elements: TabElements): MakeUpdateSelectionReturnValue => {
+  let previouslySelectedImage: Nullable<string> = null
 
-    console.log({ selectedButton })
+  const onImageChange: SelectedImageCallback = (selectedImageSrc) => {
+    const selectedClassName = withPrefix(config.css.classPrefix, config.css.classesSuffixes.selectedImageButton)
+    const selectedImageName = !isNil(selectedImageSrc) ? getImageNameFromPath(selectedImageSrc) : null
 
-    selectedButton?.classList.add(selectedClassName)
+    elements.buttons.images.forEach((imageButton) => imageButton.classList.remove(selectedClassName))
+    if (!isNil(selectedImageName)) {
+      const selectedButton = elements.buttons.images.find((buttonEl) => {
+        const src = buttonEl.querySelector('img')?.src
+        return !isNil(src) && decodeURIComponent(src).includes(selectedImageName)
+      })
+
+      selectedButton?.classList.add(selectedClassName)
+      selectedButton?.scrollIntoView({ behavior: 'smooth' })
+    }
   }
+
+  const onPageChange = (): void => onImageChange(previouslySelectedImage)
+
+  return {
+    onPageChange,
+    onImageChange: (selectedImageSrc) => {
+      onImageChange(selectedImageSrc)
+      previouslySelectedImage = selectedImageSrc
+    }
+  }
+}
+
+export const makeOnMainPageSourcesChanged = (
+  config: TabConfig,
+  images: ImagesElements,
+  resetLoading: () => void,
+  updateImages: UpdateImages
+): ImageSourcesCallback => {
+  return debounce<ImageSourcesCallback>(async (element) => {
+    resetLoading()
+    void updateImages(extractImageSrcs(element), images)
+  }, config.debounceMs)
 }

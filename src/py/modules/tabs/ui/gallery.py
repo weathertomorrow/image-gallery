@@ -22,6 +22,7 @@ class HiddenElements(TypedDict):
   imagesSrcContainers: List[gradio.HTML]
   selectedImage: gradio.Image
   refreshCounter: gradio.Number #for refreshing files due to interaction inside of the tab
+  pageIndex: gradio.HTML
 
 class Gallery(TypedDict):
   navigation: Navigation
@@ -68,6 +69,7 @@ def createGallery(arg: CreateGalleryArg) -> Gallery:
       hiddenImagesSrcContainers = createSrcContainers(tabConfig, arg["getImagesPage"])
       hiddenSelectedImage = gradio.Image(visible = False, interactive = False,  type = "pil")
       hiddenRefreshCounter = gradio.Number(visible = False, value = 0)
+      hiddenPageIndex = gradio.HTML(value = f'{staticConfig["tabDefaults"]["pageIndex"]}', elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["hiddenPageIndex"], tabConfig))
 
     createButton = makeCreateButton(tabConfig)
 
@@ -77,10 +79,11 @@ def createGallery(arg: CreateGalleryArg) -> Gallery:
       searchBox = gradio.Textbox(label = "search by name")
       refreshButton = gradio.Button("Refresh", elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["refreshButton"], tabConfig))
 
-    with gradio.Row():
+    with gradio.Row(elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["navigationControllsContainer"], tabConfig)):
       firstPage = gradio.Button('First Page')
       prevPage = gradio.Button('Prev Page')
       pageIndex = gradio.Number(value = staticConfig["tabDefaults"]["pageIndex"], label = "Page Index")
+
       nextPage = gradio.Button('Next Page')
       lastPage = gradio.Button('Last Page')
 
@@ -113,6 +116,7 @@ def createGallery(arg: CreateGalleryArg) -> Gallery:
       "imagesSrcContainers": hiddenImagesSrcContainers,
       "selectedImage": hiddenSelectedImage,
       "refreshCounter": hiddenRefreshCounter,
+      "pageIndex": hiddenPageIndex
     },
     "sort": {
       "by": sortBy,

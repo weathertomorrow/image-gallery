@@ -24,7 +24,9 @@ const staticConfig = {
     progressBar: 'progressbar',
     generateThumbnailsButton: 'generateThumbnailsButton',
     generateThumbnailsContainer: 'generateThumbnailsContainer',
-    selectedImagePath: 'selectedImagePath'
+    selectedImagePath: 'selectedImagePath',
+    navigationControllsContainer: 'navigationControllsContainer',
+    hiddenPageIndex: 'hiddenPageIndex'
   }
 } as const
 

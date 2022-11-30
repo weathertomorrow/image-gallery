@@ -1,4 +1,4 @@
-import { isNil } from 'lodash'
+import { isEmpty, isNil } from 'lodash'
 import { TabConfig } from '../config'
 
 import { tabElementQueryString, withPrefix, withSuffix } from '../utils/str'
@@ -16,6 +16,15 @@ export type TabElements = Readonly<{
     main: Element
     next: Element[]
   }
+  navigation: {
+    buttons: {
+      firstPage: HTMLButtonElement
+      prevPage: HTMLButtonElement
+      nextPage: HTMLButtonElement
+      lastPage: HTMLButtonElement
+    }
+    index: Element
+  }
   gallery: {
     container: Element
     gallery: Element
@@ -27,6 +36,38 @@ export type TabElements = Readonly<{
     generateThumbnails: Nullable<HTMLButtonElement>
   }
 }>
+
+const getPageIndex = (config: TabConfig): Nullable<Element> => {
+  const queryString = tabElementQueryString(config, 'hiddenPageIndex')
+  return config.tabRoot.querySelector(queryString)?.querySelector(queryString)
+}
+
+const getNavigation = (config: TabConfig): Nullable<TabElements['navigation']> => {
+  const pageIndex = getPageIndex(config)
+
+  if (isNil(pageIndex)) {
+    return null
+  }
+
+  const buttons = Array.from(config.tabRoot.querySelector(tabElementQueryString(config, 'navigationControllsContainer'))
+    ?.querySelectorAll('button') ?? [])
+
+  if (isEmpty(buttons) || buttons.length !== 4) {
+    return null
+  }
+
+  const [firstPage, prevPage, nextPage, lastPage] = buttons
+
+  return {
+    buttons: {
+      firstPage,
+      prevPage,
+      nextPage,
+      lastPage
+    },
+    index: pageIndex
+  }
+}
 
 const getSelectedImagePath = (config: TabConfig): Nullable<HTMLTextAreaElement> => {
   return config.tabRoot.querySelector(tabElementQueryString(config, 'selectedImagePath'))
@@ -124,8 +165,9 @@ const getElements = (config: TabConfig): Nullable<TabElements> => {
   const imageSrcs = getImageSrcs(config)
   const gallery = getGallery(config)
   const galleryContainer = getGalleryContainer(config)
+  const navigation = getNavigation(config)
 
-  if (isNil(refreshButton) || isNil(imageSrcs) || isNil(gallery) || isNil(galleryContainer)) {
+  if (isNil(refreshButton) || isNil(imageSrcs) || isNil(gallery) || isNil(galleryContainer) || isNil(navigation)) {
     return null
   }
 
@@ -142,7 +184,8 @@ const getElements = (config: TabConfig): Nullable<TabElements> => {
     },
     generateMissingThumbnailsContainer: generateThumbnailsContainer,
     imageSrcs,
-    progressBar
+    progressBar,
+    navigation
   }
 }
 

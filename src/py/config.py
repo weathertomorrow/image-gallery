@@ -56,9 +56,11 @@ class IdSuffixesConfigs(TypedDict):
   selectedImagePath: str
   moveToButton: str
   refreshButton: str
+  hiddenPageIndex: str
   sidePanelButtonsContainer: str
   generateThumbnailsButton: str
   generateThumbnailsContainer: str
+  navigationControllsContainer: str
 
 class TabDefaults(TypedDict):
   pageIndex: int
@@ -99,6 +101,7 @@ staticConfig: StaticConfig = {
     "galleryTab": "galleryTab",
     "gallery": "gallery",
     "galleryContainer": "galleryContainer",
+    "navigationControllsContainer": "navigationControllsContainer",
     "imgSrcs": "imgSrcs",
     "imgButton": "imgButton",
     "moveToButton": "moveToButton",
@@ -106,7 +109,8 @@ staticConfig: StaticConfig = {
     "generateThumbnailsButton": "generateThumbnailsButton",
     "generateThumbnailsContainer": "generateThumbnailsContainer",
     "sidePanelButtonsContainer": "sidePanelButtonsContainer",
-    "selectedImagePath": "selectedImagePath"
+    "selectedImagePath": "selectedImagePath",
+    "hiddenPageIndex": "hiddenPageIndex"
   },
   "tabDefaults": {
     "pageIndex": 0,

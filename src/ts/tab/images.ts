@@ -1,6 +1,7 @@
 import { isArray, isNil, last, negate, nth } from 'lodash'
 import { Nullable } from '../utils/types'
 import { isArrayOf, isEmpty, isImagePathData } from './guards'
+import { DoneCallback } from './listeners'
 
 export type ParsedImage = Readonly<{
   image: string
@@ -71,7 +72,8 @@ export const makeChangeImagesVisiblity = (shouldBeVisible: boolean, images: Imag
 
 export type UpdateImages = (newImagesSources: ParsedImage[], images: ImagesElements) => Promise<boolean>
 export const makeUpdateImages = (
-  listener: (imageIndex: number) => void
+  onImageLoadListener: (imageIndex: number) => void,
+  onDoneUpdatingListener: DoneCallback
 ): UpdateImages => async (newImagesSources, images) => {
   images.forEach((image, i) => {
     const source = newImagesSources[i]?.thumbnail ?? newImagesSources[i]?.image
@@ -79,15 +81,17 @@ export const makeUpdateImages = (
     if (!isNil(source)) {
       markImageAsNormal(image)
       image.src = source
-      image.onload = () => listener(i)
+      image.onload = () => onImageLoadListener(i)
       image.onerror = () => {
         image.src = newImagesSources[i]?.image
       }
     } else {
       markImageAsPermanentlyHidden(image)
-      listener(i)
+      onImageLoadListener(i)
     }
   })
+
+  onDoneUpdatingListener(true)
 
   return true
 }

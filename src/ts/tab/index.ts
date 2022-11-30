@@ -11,7 +11,7 @@ import { extractGridDimensions, updateGridCssVariables } from './grid'
 import { makeHTMLEventListener, makeImageLoadListener } from './listeners'
 import { makeEmitClick } from './eventEmitters'
 import { extractImageSrcs, insertImagesIntoButtons, makeUpdateImages, makeChangeImagesVisiblity, makePreloadImages } from './images'
-import { makeShowLoading, makeUpdateGalleryModes, makeUpdateSelection } from './domUpdates'
+import { makeOnMainPageSourcesChanged, makeShowLoading, makeUpdateGalleryModes, makeUpdateSelection } from './domUpdates'
 
 export const initTab = (config: TabConfig): void => {
   const elements = getElements(config)
@@ -36,11 +36,13 @@ export const initTab = (config: TabConfig): void => {
     onReset: hideImages
   })
 
-  observers.mainPageSource(makeUpdateImages(aggregatedLoadListener), resetLoadingPrevPage, images)
+  const { onImageChange, onPageChange } = makeUpdateSelection(config, elements)
+
+  observers.mainPageSource([makeOnMainPageSourcesChanged(config, images, resetLoadingPrevPage, makeUpdateImages(aggregatedLoadListener, onPageChange))])
   observers.preloadedPagesSources([makePreloadImages(config.preloadRoot)])
   observers.progressBarObserver([refresh])
   observers.generateThumbnailsObserver([refresh])
-  observers.selectedImageObserver([makeUpdateGalleryModes(config, elements), makeUpdateSelection(config, elements)])
+  observers.selectedImageObserver([makeUpdateGalleryModes(config, elements), onImageChange])
 
   elements.buttons.moveToThisTab.forEach(makeHTMLEventListener(refresh))
   elements.buttons.generateThumbnails?.addEventListener('click', makeShowLoading(config, elements.buttons.generateThumbnails))
