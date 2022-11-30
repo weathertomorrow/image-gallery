@@ -73,7 +73,6 @@ export const makeUpdateSelection = (config: TabConfig, elements: TabElements): M
       })
 
       selectedButton?.classList.add(selectedClassName)
-      selectedButton?.scrollIntoView({ behavior: 'smooth' })
     }
   }
 

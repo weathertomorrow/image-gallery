@@ -48,12 +48,38 @@ def imageBelongsToTab(tab: TabConfig, imagePath: str):
 def getFilenameFromPath(path: str):
   return basename(path)
 
+SiblingImage = Union[None, DirEntry[str]]
+def getSiblingImages(image: str, dir: list[DirEntry[str]]) -> tuple[SiblingImage, SiblingImage]:
+  maxIndex = len(dir) - 1
+
+  for (index, dirEntry) in enumerate(dir):
+    if path.samefile(image, dirEntry.path):
+      prevImage = None
+      nextImage = None
+
+      prevIndex = index - 1
+      nextIndex = index + 1
+
+      if prevIndex >= 0:
+        prevImage = dir[prevIndex]
+
+      if nextIndex <= maxIndex:
+        nextImage = dir[nextIndex]
+
+      return (prevImage, nextImage)
+  return (None, None)
+
 def moveFileAndPreventDuplicates(filePath: str, desination: str, updateTimes = False):
   try:
     move(filePath, desination)
   except (Error) as e:
-    if ("already exists" in e.__str__()):
+    # ignore, probably was moved manually
+    if ("already exists" in str(e)):
       remove(filePath)
+      return
+    # ignore, user probably is clicking quickly and initiated move multiple times
+    if ("it is being used by another process" in str(e)):
+      return
     else:
       raise e
 

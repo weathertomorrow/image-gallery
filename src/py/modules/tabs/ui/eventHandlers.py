@@ -7,7 +7,7 @@ from modules.extras import run_pnginfo
 
 from src.py.config import TabConfig, SingleTabConfig
 from src.py.modules.shared.mutable import MUTABLE_ImagesInDirRef
-from src.py.modules.shared.files import getFilenameFromPath, moveFileAndPreventDuplicates
+from src.py.modules.shared.files import getFilenameFromPath, moveFileAndPreventDuplicates, getSiblingImages
 
 from src.py.modules.tabs.ui.gallery import Gallery
 from src.py.modules.tabs.ui.sidePanel import SidePanel
@@ -37,6 +37,9 @@ def deselectImage():
 def makeMoveImage(targetTab: SingleTabConfig, imagesInDir: MUTABLE_ImagesInDirRef):
   # these are here because files need to be refreshed afterwards
   def moveImage(sortOrder: str, sortBy: str, image: str, counter: float):
+    nextCounterValue = 0 if int(counter) == 1 else 1
+    (prevImage, nextImage) = getSiblingImages(image, imagesInDir["images"])
+
     moveFileAndPreventDuplicates(image, targetTab["path"], targetTab["runtimeConfig"]["modifyTimes"])
 
     imageName = getFilenameFromPath(image)
@@ -51,7 +54,10 @@ def makeMoveImage(targetTab: SingleTabConfig, imagesInDir: MUTABLE_ImagesInDirRe
     if imageThumbnail is not None:
         moveFileAndPreventDuplicates(imageThumbnail, targetTab["thumbnailsPath"])
 
-    return (None, 0 if int(counter) == 1 else 1)
+    if nextImage is not None or prevImage is not None:
+      nextSelectedImage = nextImage if nextImage is not None  else prevImage
+      return(nextSelectedImage.path, nextSelectedImage.path, nextCounterValue)
+    return (None, None, nextCounterValue)
 
   return moveImage
 
@@ -105,7 +111,7 @@ def getEventInputsAndOutputs(gallery: Gallery, sidePanel: SidePanel) -> UNSAFE_U
 
   moveToTab: InputOutputPair = {
     "inputs": [*sortArgOrder, sidePanel["image"]["name"], gallery["hidden"]["refreshCounter"]],
-    "outputs": [gallery["hidden"]["selectedImage"], gallery["hidden"]["refreshCounter"]]
+    "outputs": [gallery["hidden"]["selectedImage"], sidePanel["image"]["name"], gallery["hidden"]["refreshCounter"]]
   }
 
   selectedImage: InputOutputPair = {
