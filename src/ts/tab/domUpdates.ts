@@ -17,6 +17,19 @@ export const makeShowLoading = (config: TabConfig, element: Nullable<HTMLElement
   element.after(loadingTag)
 }
 
+const findButtonForImage = (elements: TabElements, image: string): Nullable<HTMLElement> => {
+  const selectedImageName = getImageNameFromPath(image)
+
+  if (isNil(selectedImageName)) {
+    return null
+  }
+
+  return elements.buttons.images.find((buttonEl) => {
+    const src = buttonEl.querySelector('img')?.src
+    return !isNil(src) && decodeURIComponent(src).includes(selectedImageName)
+  })
+}
+
 const turnToImageBrowsing = (config: TabConfig, elements: TabElements, selectedImageSrc: string): void => {
   const imageBrowsingClassName = withPrefix(config.css.classPrefix, config.css.classesSuffixes.imageSelectedMode)
 
@@ -32,6 +45,8 @@ const turnToImageBrowsing = (config: TabConfig, elements: TabElements, selectedI
     imagePreview.src = toLocalImagePath(selectedImageSrc)
     imagePreview.classList.add(withPrefix(config.css.classPrefix, config.css.classesSuffixes.selectedImage))
     elements.gallery.gallery.before(imagePreview)
+
+    findButtonForImage(elements, selectedImageSrc)?.scrollIntoView({ behavior: 'smooth' })
   }
 }
 
@@ -63,15 +78,10 @@ export const makeUpdateSelection = (config: TabConfig, elements: TabElements): M
 
   const onImageChange: SelectedImageCallback = (selectedImageSrc) => {
     const selectedClassName = withPrefix(config.css.classPrefix, config.css.classesSuffixes.selectedImageButton)
-    const selectedImageName = !isNil(selectedImageSrc) ? getImageNameFromPath(selectedImageSrc) : null
-
     elements.buttons.images.forEach((imageButton) => imageButton.classList.remove(selectedClassName))
-    if (!isNil(selectedImageName)) {
-      const selectedButton = elements.buttons.images.find((buttonEl) => {
-        const src = buttonEl.querySelector('img')?.src
-        return !isNil(src) && decodeURIComponent(src).includes(selectedImageName)
-      })
 
+    if (!isNil(selectedImageSrc)) {
+      const selectedButton = findButtonForImage(elements, selectedImageSrc)
       selectedButton?.classList.add(selectedClassName)
     }
   }
