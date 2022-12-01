@@ -1,8 +1,8 @@
 from typing import Union, TypedDict
 
-from src.py.config import StaticConfig, TabConfig, SortBy, SortOrder
+from src.py.config import TabConfig, SortBy, SortOrder
 from src.py.modules.shared.sort import getSortParam, sortImages
-from src.py.modules.shared.files import ImagesInDir, getImagesInDir
+from src.py.modules.shared.files import ImagesInDir, getImagesInDir, forceRemove
 from src.py.modules.shared.names import getImageNameFromThumbnailName
 
 Thumbnails = dict[str, str]
@@ -34,8 +34,6 @@ def getThumbnailsForTab(tabConfig: TabConfig) -> Thumbnails:
   }
 
 def addThumbnailsToImages(imagesInDir: MUTABLE_ImagesInDirRefBase, tabConfig: TabConfig) -> MUTABLE_ImagesInDirRef :
-  staticConfig = tabConfig["staticConfig"]
-
   if not tabConfig["runtimeConfig"]["useThumbnails"]:
     return {
       **imagesInDir,
@@ -47,11 +45,46 @@ def addThumbnailsToImages(imagesInDir: MUTABLE_ImagesInDirRefBase, tabConfig: Ta
     "thumbnails": getThumbnailsForTab(tabConfig)
   }
 
-def updateImagesInDirRef(prev: MUTABLE_ImagesInDirRef, images: ImagesInDir, thumbnails: Thumbnails, sortOrder: SortOrder, sortBy: SortBy) -> None:
+def updateImagesInDirRef(prev: MUTABLE_ImagesInDirRef, images: ImagesInDir, thumbnails: Thumbnails, sortOrder:  SortOrder, sortBy: SortBy) -> MUTABLE_ImagesInDirRef:
   prev["images"] = images
   prev["prevSortBy"] = sortBy
   prev["prevSortOrder"] = sortOrder
   prev["thumbnails"] = thumbnails
+
+  return prev
+
+def removeFilesOverLimit(ref: MUTABLE_ImagesInDirRef, tabConfig: TabConfig) -> MUTABLE_ImagesInDirRef:
+  limit = tabConfig["maxSize"]
+
+  if limit is None or limit < 0:
+    return ref
+
+  sortedImages = sortImages(ref["images"], SortOrder.DESC, SortBy.DATE)
+  imagesToRemove = sortedImages[limit:]
+
+  for image in imagesToRemove:
+    thumbnail = (
+      ref["thumbnails"][image.name]
+        if
+      tabConfig["runtimeConfig"]["useThumbnails"] and image.name in ref["thumbnails"]
+        else
+      None
+    )
+
+    forceRemove(image.path)
+
+    if thumbnail is not None:
+      forceRemove(thumbnail)
+      ref["thumbnails"].pop(image.name)
+
+  return updateImagesInDirRef(
+    ref,
+    [image for image in ref["images"] if image not in imagesToRemove],
+    ref["thumbnails"],
+    ref["prevSortOrder"] or tabConfig["staticConfig"]["tabDefaults"]["sortOrder"],
+    ref["prevSortBy"] or tabConfig["staticConfig"]["tabDefaults"]["sortBy"]
+  )
+
 
 def makeWithRefreshFiles(ref: MUTABLE_ImagesInDirRef, tabConfig: TabConfig):
   staticConfig = tabConfig["staticConfig"]
@@ -60,6 +93,7 @@ def makeWithRefreshFiles(ref: MUTABLE_ImagesInDirRef, tabConfig: TabConfig):
   def withRefresh(fn):
     def wrapped(*args, **kwargs):
       (sortOrder, sortBy) = getSortParam(args[0], args[1])
+
       updateImagesInDirRef(
         ref,
         sortImages(getImagesInDir(staticConfig, tabConfig["path"]), sortOrder, sortBy),
@@ -67,9 +101,8 @@ def makeWithRefreshFiles(ref: MUTABLE_ImagesInDirRef, tabConfig: TabConfig):
         sortOrder,
         sortBy
       )
+      removeFilesOverLimit(ref, tabConfig)
 
-      output = fn(*args, **kwargs)
-
-      return output
+      return fn(*args, **kwargs)
     return wrapped
   return withRefresh

@@ -3,7 +3,7 @@ from typing import TypedDict
 
 from src.py.config import TabConfig
 from src.py.modules.shared.files import makeDirIfMissing, removeDirIfExists
-from src.py.modules.shared.mutable import getImagesInDirRef, makeWithRefreshFiles, addThumbnailsToImages
+from src.py.modules.shared.mutable import getImagesInDirRef, makeWithRefreshFiles, addThumbnailsToImages, removeFilesOverLimit
 
 from src.py.modules.tabs.ui.gallery import createGallery
 from src.py.modules.tabs.ui.sidePanel import createSidePanel
@@ -29,7 +29,7 @@ def createTab(tabConfig: TabConfig) -> CreateTabReturnValue:
   defaults = staticConfig["tabDefaults"]
   runtimeConfig = tabConfig["runtimeConfig"]
 
-  allImagesInDirRef = addThumbnailsToImages(getImagesInDirRef(tabConfig, tabConfig["path"]), tabConfig)
+  allImagesInDirRef = removeFilesOverLimit(addThumbnailsToImages(getImagesInDirRef(tabConfig, tabConfig["path"]), tabConfig), tabConfig)
   getImages = makeGetImages(tabConfig, allImagesInDirRef)
   imagesPerPage = getImagesPerPage(tabConfig)
   withRefreshFiles = makeWithRefreshFiles(allImagesInDirRef, tabConfig)

@@ -22,7 +22,6 @@ def getSortBy(radioOptValue: str) -> SortBy:
 def getSortParam(sortOrderRadioOptValue: str, sortByRadioOptValue) -> tuple[SortOrder, SortBy]:
   return (getSortOrder(sortOrderRadioOptValue), getSortBy(sortByRadioOptValue))
 
-
 ImageSortingKey = Callable[[DirEntry[str]],  Union[str, float]]
 def makeImageSortingKey(sortBy: SortBy) -> ImageSortingKey:
   def imageSortingKey(image: DirEntry[str]):
@@ -31,5 +30,5 @@ def makeImageSortingKey(sortBy: SortBy) -> ImageSortingKey:
     return image.name
   return imageSortingKey
 
-def sortImages(imagesInDir: ImagesInDir, sortOrder: SortOrder, sortBy: SortBy):
+def sortImages(imagesInDir: ImagesInDir, sortOrder: SortOrder, sortBy: SortBy) -> ImagesInDir:
   return sorted(imagesInDir, reverse = sortOrder != SortOrder.ASC, key = makeImageSortingKey(sortBy))
