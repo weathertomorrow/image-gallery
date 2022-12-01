@@ -1,5 +1,6 @@
 from os import makedirs, path, DirEntry, scandir, remove, utime
 from datetime import datetime
+from time import sleep
 from shutil import move, Error
 from ntpath import basename
 from shutil import rmtree
@@ -69,19 +70,34 @@ def getSiblingImages(image: str, dir: list[DirEntry[str]]) -> tuple[SiblingImage
       return (prevImage, nextImage)
   return (None, None)
 
+def forceRemove(filePath: str):
+  while True:
+    try:
+      return remove(filePath)
+    except FileNotFoundError:
+      return
+    except (Error) as e:
+      sleep(.5)
+
 def moveFileAndPreventDuplicates(filePath: str, desination: str, updateTimes = False):
   try:
     move(filePath, desination)
   except (Error) as e:
     # ignore, probably was moved manually
-    if ("already exists" in str(e)):
-      remove(filePath)
+    errorMessage = str(e)
+    alreadyExist = "already exists" in errorMessage
+    alreadyBeingMoved = "it is being used by another process" in errorMessage
+
+    if (alreadyExist):
+      forceRemove(filePath)
       return
     # ignore, user probably is clicking quickly and initiated move multiple times
-    if ("it is being used by another process" in str(e)):
+    if (alreadyBeingMoved):
       return
     else:
       raise e
+  except:
+    return
 
   if (updateTimes):
     now = datetime.now().timestamp()

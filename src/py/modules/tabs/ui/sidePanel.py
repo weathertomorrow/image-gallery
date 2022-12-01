@@ -39,11 +39,9 @@ def createSidePanel(tabConfig: TabConfig) -> SidePanel:
   createMoveToButton = makeCreateMoveToButton(tabConfig)
 
   with gradio.Column(visible = False) as container:
-    with gradio.Column():
-      imgPrompts = gradio.Textbox(label = "Generated Info", interactive = False, lines = 6)
-      imgName = gradio.Textbox(label = "File Name", interactive = False, lines = 2,  elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["selectedImagePath"], tabConfig))
-      imgTime = gradio.HTML()
     with gradio.Column(elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["sidePanelButtonsContainer"], tabConfig)):
+      deselect = gradio.Button(value = "Close")
+
       with gradio.Row():
         sendTo = {
           tab["id"]: createSendToButton(tab) for tab in sortSendToTabs([tabConfig, *tabConfig["otherTabs"]]) if tab["sendToEnabled"]
@@ -51,7 +49,12 @@ def createSidePanel(tabConfig: TabConfig) -> SidePanel:
 
       with gradio.Row():
         moveTo = [createMoveToButton(otherTab) for otherTab in tabConfig["otherTabs"] if otherTab["moveToEnabled"]]
-      deselect = gradio.Button(value = "Close")
+
+    with gradio.Column():
+      imgPrompts = gradio.Textbox(label = "Generated Info", interactive = False, lines = 6)
+      imgName = gradio.Textbox(label = "File Name", interactive = False, lines = 2,  elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["selectedImagePath"], tabConfig))
+      imgTime = gradio.HTML()
+
 
   return  {
     "container": container,

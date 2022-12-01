@@ -114,7 +114,12 @@
 }
 
 [id$=sidePanelButtonsContainer_images_gallery] {
-  justify-content: flex-end;
+  justify-content: flex-start;
+  flex-grow: 0 !important;
+
+  &, & + * {
+    align-self: flex-start;
+  }
 }
 
 [id$=gallery_images_gallery].image_gallery_imageSelectedMode {
