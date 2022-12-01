@@ -1,16 +1,14 @@
-import { isArray, isNil, last, negate, nth } from 'lodash'
+import { isArray, isNil, negate, nth } from 'lodash'
 import { Nullable } from '../utils/types'
 import { isImagePathData } from './guards'
 import { isArrayOf, isEmpty } from '../utils/guards'
 import { DoneCallback } from './listeners'
+import { toLocalImagePath } from './utils'
 
 export type ParsedImage = Readonly<{
   image: string
   thumbnail: Nullable<string>
 }>
-
-export const toLocalImagePath = (imgPath: string): string => `file=${imgPath}`
-export const getImageNameFromPath = (imgPath: string): Nullable<string> => last(imgPath.split(/[/\\]/g))
 
 export const extractImageSrcs = (element: Element): ParsedImage[] => {
   if (isEmpty(element.innerHTML)) {

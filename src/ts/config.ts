@@ -1,6 +1,9 @@
 const staticConfig = {
-  gradioAppTag: 'gradio-app',
-  gradioHiddenElementCSSClass: '!hidden',
+  gradio: {
+    appTag: 'gradio-app',
+    hiddenElementCSSClass: '!hidden',
+    containerCSSClass: '.gradio-container'
+  },
   extensionId: 'images_gallery',
   css: {
     classPrefix: 'image_gallery',
@@ -8,7 +11,9 @@ const staticConfig = {
       spinner: 'spinner',
       imageSelectedMode: 'imageSelectedMode',
       selectedImage: 'selectedImage',
-      selectedImageButton: 'selectedImageButton'
+      selectedImageButton: 'selectedImageButton',
+      bigPictureMode: 'bigPictureMode',
+      bigPictureModeContainer: 'bigPictureModeContainer'
     }
   },
   debounceMs: 200,
@@ -29,16 +34,21 @@ const staticConfig = {
     hiddenPageIndex: 'hiddenPageIndex'
   }
 } as const
+export type StaticConfig = typeof staticConfig
 
 export type RuntimeConfig = Readonly<{
   tabId: string
   appRoot: ShadowRoot
   tabRoot: HTMLElement
   preloadRoot: Element
+  bigPictureRoot: Element
+  gradioContainer: Element
 }>
 
-export type BaseTabConfig = StaticConfig & RuntimeConfig
-export type StaticConfig = typeof staticConfig
+export type BaseTabConfig = Readonly<{
+  staticConfig: StaticConfig
+  runtimeConfig: RuntimeConfig
+}>
 
 export type TabConfig = BaseTabConfig & Readonly<{
   otherTabs: BaseTabConfig[]

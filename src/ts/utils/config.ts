@@ -1,5 +1,6 @@
 import { isNil } from 'lodash'
 import { BaseTabConfig, StaticConfig, TabConfig } from '../config'
+import { createEmptyContainer } from './elements'
 import { isEmpty } from './guards'
 import { withSuffix } from './str'
 import { Nullable } from './types'
@@ -15,18 +16,37 @@ const extractTabId = (staticConfig: StaticConfig, tab: Element): Nullable<string
   return null
 }
 
-export const makeExpandConfig = (staticConfig: StaticConfig, preloadRoot: Element, appRoot: Nullable<ShadowRoot>) => (tabRoot: HTMLElement): Nullable<BaseTabConfig> => {
-  const tabId = extractTabId(staticConfig, tabRoot)
+type MakeExpandConfigArg = Readonly<{
+  staticConfig: StaticConfig
+  preloadRoot: Element
+  appRoot: Nullable<ShadowRoot>
+}>
 
-  if (isNil(tabId) || isNil(appRoot)) {
+export const makeExpandConfig = ({ staticConfig, appRoot, preloadRoot }: MakeExpandConfigArg) => (tabRoot: HTMLElement): Nullable<BaseTabConfig> => {
+  const tabId = extractTabId(staticConfig, tabRoot)
+  const gradioContainer = appRoot?.querySelector(staticConfig.gradio.containerCSSClass)
+
+  if (isNil(tabId) || isNil(appRoot) || isNil(gradioContainer)) {
     return null
   }
 
-  return { ...staticConfig, appRoot, tabRoot, tabId, preloadRoot }
+  const bigPictureRoot = createEmptyContainer(appRoot)
+
+  return {
+    staticConfig,
+    runtimeConfig: {
+      bigPictureRoot,
+      appRoot,
+      tabRoot,
+      tabId,
+      preloadRoot,
+      gradioContainer
+    }
+  }
 }
 
 export const includeOtherTabConfigs = (thisTab: BaseTabConfig, _: number, allTabs: BaseTabConfig[]): TabConfig => {
-  const allExpectThis = allTabs.filter((tab) => tab.tabId !== thisTab.tabId)
+  const allExpectThis = allTabs.filter((tab) => tab.runtimeConfig.tabId !== thisTab.runtimeConfig.tabId)
 
   return {
     ...thisTab,

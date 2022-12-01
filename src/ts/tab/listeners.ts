@@ -39,7 +39,7 @@ export const makeGenerateThumbnailsListener = (config: TabConfig, isDone: DoneCa
 
   const [{ target }] = mutation
 
-  if (!isNil(target) && target instanceof Element && target.classList.contains(config.gradioHiddenElementCSSClass)) {
+  if (!isNil(target) && target instanceof Element && target.classList.contains(config.staticConfig.gradio.hiddenElementCSSClass)) {
     isDone(true)
   } else {
     isDone(false)
@@ -126,6 +126,18 @@ export const makeImageLoadListener = ({
   }
 }
 
-export const makeHTMLEventListener = (listener: () => void, eventType: keyof HTMLElementEventMap = 'click') => (element: HTMLElement) => {
-  element.addEventListener(eventType, listener)
+export const makeHTMLEventListener = (
+  eventType: keyof HTMLElementEventMap,
+  listener: () => void,
+  checkTarget?: (eventTarget: HTMLElement) => boolean
+) => (element: HTMLElement) => {
+  element.addEventListener(eventType, (e) => {
+    if (!isNil(checkTarget)) {
+      if (!isNil(e.target) && e.target instanceof HTMLElement && checkTarget(e.target)) {
+        listener()
+      }
+    } else {
+      listener()
+    }
+  })
 }

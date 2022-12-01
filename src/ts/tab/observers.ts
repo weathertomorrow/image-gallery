@@ -37,7 +37,7 @@ const makePreloadedPagesSourceObservers = (config: TabConfig, elements: TabEleme
 
     const observer = new MutationObserver(makeImageSourcesListener(debounce(async (element) => {
       preloadImages.forEach(call(extractImageSrcs(element)))
-    }, config.debounceMs)))
+    }, config.staticConfig.debounceMs)))
 
     observer.observe(imageSrcNode, { childList: true })
     return observer
