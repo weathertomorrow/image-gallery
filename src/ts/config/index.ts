@@ -99,3 +99,10 @@ export const getConfigWithExternalElements = (configWithTabInfo: Nullable<Config
     externalElements
   }
 }
+
+export const finalizeTabConfig = (configWithExternalElements: ConfigWithExternalElements, index: number): TabConfig => {
+  return {
+    ...configWithExternalElements,
+    index
+  }
+}

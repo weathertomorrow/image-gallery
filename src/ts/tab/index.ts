@@ -35,6 +35,7 @@ export const initTab = (config: TabConfig): void => {
 
   const selection = makeUpdateSelection(config, tabElements)
   const bigPictureControls = makeBigPictureModeHandlers(config, tabElements)
+  const switchTabKeybindArg = [{ shift: true }, wrapped(flow(makeGetSwitchToThisTabButton(config), emitClick))] as const
 
   observers.mainPageSource([makeOnMainPageSourcesChanged(config, images, resetLoadingPrevPage, makeUpdateImages(aggregatedLoadListener, selection.onPageChange))])
   observers.preloadedPagesSources([makePreloadImages(config.runtimeConfig.preloadRoot)])
@@ -47,26 +48,22 @@ export const initTab = (config: TabConfig): void => {
   config.runtimeConfig.bigPictureRoot.addEventListener('click', bigPictureControls.close)
   tabElements.buttons.images.forEach(makeHTMLEventListener('click', ifInBigPictureMode(config.runtimeConfig, bigPictureControls), makeIsSelectedButton(tabElements)))
 
-  window.addEventListener('keydown', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowDown], makeClickSiblingToSelectedImage('next', tabElements))))
-  window.addEventListener('keydown', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowUp], makeClickSiblingToSelectedImage('previous', tabElements))))
-  window.addEventListener('keydown', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowLeft], makeEmitClick(tabElements.navigation.buttons.prevPage))))
-  window.addEventListener('keydown', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowRight], makeEmitClick(tabElements.navigation.buttons.nextPage))))
-  window.addEventListener('keydown', ifTabActive(config.runtimeConfig, onKey([Keys.Esc], ifInBigPictureMode(config.runtimeConfig, {
+  window.addEventListener('keyup', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowDown], makeClickSiblingToSelectedImage('next', tabElements))))
+  window.addEventListener('keyup', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowUp], makeClickSiblingToSelectedImage('previous', tabElements))))
+  window.addEventListener('keyup', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowLeft], makeEmitClick(tabElements.navigation.buttons.prevPage))))
+  window.addEventListener('keyup', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowRight], makeEmitClick(tabElements.navigation.buttons.nextPage))))
+  window.addEventListener('keyup', ifTabActive(config.runtimeConfig, onKey([Keys.Esc], ifInBigPictureMode(config.runtimeConfig, {
     if: bigPictureControls.close,
     else: makeEmitClick(tabElements.buttons.deselectImage)
   }))))
+  window.addEventListener('keyup', onKey([tabInfo.keybind, `${config.index + 1}`], ...switchTabKeybindArg))
+  window.addEventListener('keyup', onKey([tabInfo.keybind], { shift: false }, () => {
+    externalElements.moveToThisTabButtons.forEach((button) => {
+      const containingTab = config.otherTabs.find(flow(prop('runtimeConfig'), prop('tabRoot'), contains(button)))
 
-  if (!isNil(tabInfo.keybind)) {
-    window.addEventListener('keydown', onKey([tabInfo.keybind], { shift: false }, () => {
-      externalElements.moveToThisTabButtons.forEach((button) => {
-        const containingTab = config.otherTabs.find(flow(prop('runtimeConfig'), prop('tabRoot'), contains(button)))
-
-        if (!isNil(containingTab) && isTabActive(containingTab.runtimeConfig) && !isNil(containingTab.tabElements.MUTABLE.selectedImage)) {
-          emitClick(button)
-        }
-      })
-    }))
-
-    window.addEventListener('keydown', onKey([tabInfo.keybind], { shift: true }, wrapped(flow(makeGetSwitchToThisTabButton(config), emitClick))))
-  }
+      if (!isNil(containingTab) && isTabActive(containingTab.runtimeConfig) && !isNil(containingTab.tabElements.MUTABLE.selectedImage)) {
+        emitClick(button)
+      }
+    })
+  }))
 }

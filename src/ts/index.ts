@@ -1,4 +1,4 @@
-import { getConfigWithExternalElements, getConfigWithOtherTabs, getConfigWithTabInfo, makeGetConfigWithElements } from './config'
+import { finalizeTabConfig, getConfigWithExternalElements, getConfigWithOtherTabs, getConfigWithTabInfo, makeGetConfigWithElements } from './config'
 import { staticConfig } from './config/staticConfig'
 import { extensionElementById } from './elements/utils'
 import { initTab } from './tab'
@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .map(getConfigWithOtherTabs)
       .map(getConfigWithExternalElements)
       .filter(isNotNil)
+      .map(finalizeTabConfig)
       .forEach(initTab)
   }, 1000)
 })

@@ -32,6 +32,7 @@ export type TabConfig = BaseTabConfig & Readonly<{
   externalElements: ExternalElements
   tabElements: TabElements
   tabInfo: TabInfo
+  index: number
 }>
 
 export default staticConfig
