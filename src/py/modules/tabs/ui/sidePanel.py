@@ -40,7 +40,7 @@ def createSidePanel(tabConfig: TabConfig) -> SidePanel:
 
   with gradio.Column(visible = False) as container:
     with gradio.Column(elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["sidePanelButtonsContainer"], tabConfig)):
-      deselect = gradio.Button(value = "Close")
+      deselect = gradio.Button(value = "Close", elem_id = getTabElementId(tabConfig["staticConfig"]["elementsSuffixes"]["deselectImageButton"], tabConfig))
 
       with gradio.Row():
         sendTo = {

@@ -17,3 +17,7 @@ export function flow<A, B, C, D, E, F> (_funl: Fun<A, B>, _fun2?: Fun<B, C>, _fu
   const args = arguments
   return (arg: A) => Array.from(args).reduce((prev, curr) => curr(prev), arg)
 }
+
+export const prop = <T extends string>(key: T) => <U extends Record<T, unknown>>(arg: U): U[T] => arg[key]
+
+export const eq = (arg: unknown) => (other: unknown) => arg === other

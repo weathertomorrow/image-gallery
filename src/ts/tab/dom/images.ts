@@ -1,9 +1,10 @@
 import { isArray, isNil, negate, nth } from 'lodash'
-import { Nullable } from '../utils/types'
-import { isImagePathData } from './guards'
-import { isArrayOf, isEmpty } from '../utils/guards'
-import { DoneCallback } from './listeners'
-import { toLocalImagePath } from './utils'
+
+import { isArrayOf, isEmpty } from '../../utils/guards'
+import { Nullable } from '../../utils/types'
+import { DoneCallback } from '../events/listeners'
+import { toLocalImagePath } from '../utils'
+import { isImagePathData } from '../utils/guards'
 
 export type ParsedImage = Readonly<{
   image: string

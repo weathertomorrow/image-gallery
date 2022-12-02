@@ -21,6 +21,7 @@ class RuntimeConfig(TypedDict):
   root: str
   tabs: str
   maxTabsSizes: str
+  tabKeybinds: str
   preloadPages: int
   useThumbnails: bool
   modifyTimes: bool
@@ -34,6 +35,7 @@ class ConfigurableConfig(TypedDict):
   preloadPages: ConfigField[int]
   useThumbnails: ConfigField[bool]
   modifyTimes: ConfigField[bool]
+  tabKeybinds: ConfigField[str]
 
 defaultConfigurableConfig: ConfigurableConfig = {
   "root": ("outputs", "Root gallery directory (directories for custom tabs will be created in it)"),
@@ -44,6 +46,7 @@ defaultConfigurableConfig: ConfigurableConfig = {
   "preloadPages": (2, "Amount of pages to preload in both directions"),
   "tabs": ("trash", "Custom tabs in the gallery"),
   "maxTabsSizes": ("trash:20", "Max amount of images to store in a tab (if not specified, then no limit)"),
+  "tabKeybinds": ("trash:delete,favorites:f", "Keybinds that move the selected image to the specified directory")
 }
 
 class IdSuffixesConfigs(TypedDict):
@@ -57,10 +60,12 @@ class IdSuffixesConfigs(TypedDict):
   moveToButton: str
   refreshButton: str
   hiddenPageIndex: str
+  hiddenTabInfo: str
   sidePanelButtonsContainer: str
   generateThumbnailsButton: str
   generateThumbnailsContainer: str
   navigationControllsContainer: str
+  deselectImageButton: str
 
 class TabDefaults(TypedDict):
   pageIndex: int
@@ -74,6 +79,7 @@ class Thumbnails(TypedDict):
 
 class BuiltinTab(TypedDict):
   path: str
+  displayName: str
   moveToEnabled: bool
   sendToEnabled: bool
 
@@ -110,7 +116,9 @@ staticConfig: StaticConfig = {
     "generateThumbnailsContainer": "generateThumbnailsContainer",
     "sidePanelButtonsContainer": "sidePanelButtonsContainer",
     "selectedImagePath": "selectedImagePath",
-    "hiddenPageIndex": "hiddenPageIndex"
+    "hiddenPageIndex": "hiddenPageIndex",
+    "hiddenTabInfo": "hiddenTabInfo",
+    "deselectImageButton": "deselectImageButton",
   },
   "tabDefaults": {
     "pageIndex": 0,
@@ -120,21 +128,25 @@ staticConfig: StaticConfig = {
   "imageExtensions": [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"],
   "builtinTabs": {
     "txt2img": {
+      "displayName":"txt2img",
       "path": opts.outdir_txt2img_samples,
       "moveToEnabled": False,
       "sendToEnabled": True,
     },
     "img2img": {
+      "displayName":"img2img",
       "path":opts.outdir_img2img_samples ,
       "moveToEnabled": False,
       "sendToEnabled": True,
     },
-    "Extras": {
+    "extras": {
+      "displayName":"Extras",
       "path": opts.outdir_extras_samples,
       "moveToEnabled": True,
       "sendToEnabled": False,
     },
-    "Favorites": {
+    "favorites": {
+      "displayName":"Favorites",
       "path": opts.outdir_save,
       "moveToEnabled": True,
       "sendToEnabled": False,
@@ -151,6 +163,7 @@ class BaseTabConfig(BuiltinTab):
   id: str
   maxSize: Union[int, None]
   path: str
+  keybind: Union[str, None]
   thumbnailsPath: str
 
 class SingleTabConfig(BaseTabConfig, GlobalConfig):

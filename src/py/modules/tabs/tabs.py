@@ -7,6 +7,7 @@ from src.py.modules.shared.mutable import getImagesInDirRef, makeWithRefreshFile
 
 from src.py.modules.tabs.ui.gallery import createGallery
 from src.py.modules.tabs.ui.sidePanel import createSidePanel
+from src.py.modules.tabs.ui.tabInfo import createTabInfo
 from src.py.modules.tabs.ui.eventHandlers import makeOnImageClick, onImageChange, makeMoveImage, deselectImage, getEventInputsAndOutputs
 
 from src.py.modules.tabs.logic.tabs import getTabElementId
@@ -19,7 +20,6 @@ class CreateTabReturnValue(TypedDict):
 
 def createTab(tabConfig: TabConfig) -> CreateTabReturnValue:
   makeDirIfMissing(tabConfig["path"])
-
   if (tabConfig["runtimeConfig"]["useThumbnails"]):
     makeDirIfMissing(tabConfig["thumbnailsPath"])
   else:
@@ -35,6 +35,7 @@ def createTab(tabConfig: TabConfig) -> CreateTabReturnValue:
   withRefreshFiles = makeWithRefreshFiles(allImagesInDirRef, tabConfig)
 
   with gradio.Tab(label = tabConfig["displayName"], elem_id = getTabElementId(staticConfig["elementsSuffixes"]["galleryTab"], tabConfig)):
+    createTabInfo(tabConfig)
     with gradio.Row():
       with gradio.Column():
         with gradio.Row():
@@ -43,6 +44,7 @@ def createTab(tabConfig: TabConfig) -> CreateTabReturnValue:
             "getImagesPage": lambda index: imagesIntoData(getImages(index, defaults["sortOrder"], defaults["sortBy"])) if index >= 0 else '',
           })
           sidePanel = createSidePanel(tabConfig)
+
 
   inputsAndOutputs = getEventInputsAndOutputs(gallery, sidePanel)
   changePageConfig: PageChangingFNConfig = {

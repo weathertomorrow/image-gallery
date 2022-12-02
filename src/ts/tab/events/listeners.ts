@@ -1,8 +1,10 @@
 import { isNil } from 'lodash'
-import { TabConfig } from '../config'
-import { Nullable } from '../utils/types'
-import { isEmpty } from '../utils/guards'
-import { getSelectedImagePath } from './utils'
+
+import { TabConfig } from '../../config/types'
+
+import { isEmpty } from '../../utils/guards'
+import { Nullable } from '../../utils/types'
+import { getSelectedImagePath } from '../utils'
 
 export type ImageSourcesCallback = (node: Element) => void
 export const makeImageSourcesListener = (callback: ImageSourcesCallback): MutationCallback => (mutation) => {

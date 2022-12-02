@@ -1,9 +1,10 @@
-import staticConfig from './config'
+import { getConfigWithExternalElements, getConfigWithOtherTabs, getConfigWithTabInfo, makeGetConfigWithElements } from './config'
+import { staticConfig } from './config/staticConfig'
+import { tabElementQueryString } from './elements/tab/utils'
 import { initTab } from './tab'
+import { createEmptyContainer } from './utils/dom'
+import { flow } from './utils/fn'
 import { isNotNil } from './utils/guards'
-import { includeOtherTabConfigs, makeExpandConfig } from './utils/config'
-import { tabElementQueryString } from './utils/str'
-import { createEmptyContainer } from './utils/elements'
 
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
@@ -17,9 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
       ?.querySelector(tabElementQueryString(staticConfig, 'extensionTab'))
       ?.querySelectorAll<HTMLElement>(tabElementQueryString(staticConfig, 'galleryTab')) ?? []
     )
-      .map(makeExpandConfig({ staticConfig, appRoot, preloadRoot }))
+      .map(flow(makeGetConfigWithElements({ staticConfig, appRoot, preloadRoot }), getConfigWithTabInfo))
+      .map(getConfigWithOtherTabs)
+      .map(getConfigWithExternalElements)
       .filter(isNotNil)
-      .map(includeOtherTabConfigs)
       .forEach(initTab)
   }, 1000)
 })

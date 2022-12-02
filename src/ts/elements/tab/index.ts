@@ -1,15 +1,16 @@
-import { first, isEmpty, isNil, last } from 'lodash'
-import { TabConfig } from '../config'
+import { isEmpty, isNil } from 'lodash'
 
-import { tabElementQueryString, withPrefix, withSuffix } from '../utils/str'
-import { MutableObject, Nullable } from '../utils/types'
-import { isNotNil } from '../utils/guards'
+import { BaseTabConfig } from '../../config/types'
 
-export const getFirstImageInTab = (tabElements: TabElements): Nullable<HTMLButtonElement> => first(tabElements.buttons.images)
-export const getLastImageInTab = (tabElements: TabElements): Nullable<HTMLButtonElement> => last(tabElements.buttons.images)
+import { isNotNil } from '../../utils/guards'
+import { withPrefix, withSuffix } from '../../utils/str'
+import { MutableObject, Nullable } from '../../utils/types'
+
+import { tabElementQueryString } from './utils'
 
 export type TabElements = Readonly<{
   progressBar: Nullable<Element>
+  tabInfo: Element
   generateMissingThumbnailsContainer: Nullable<Element>
   imageSrcs: Readonly< {
     selected: HTMLTextAreaElement
@@ -33,8 +34,8 @@ export type TabElements = Readonly<{
   buttons: Readonly< {
     refresh: HTMLButtonElement
     images: HTMLButtonElement[]
-    moveToThisTab: HTMLButtonElement[]
     generateThumbnails: Nullable<HTMLButtonElement>
+    deselectImage: HTMLButtonElement
   }>
   MUTABLE: {
     selectedImage: Nullable<HTMLImageElement>
@@ -42,12 +43,17 @@ export type TabElements = Readonly<{
   }
 }>
 
-const getPageIndex = (config: TabConfig): Nullable<Element> => {
+const getTabInfo = (config: BaseTabConfig): Nullable<Element> => {
+  const queryString = tabElementQueryString(config.staticConfig, 'hiddenTabInfo')
+  return config.runtimeConfig.tabRoot.querySelector(queryString)?.querySelector(queryString)
+}
+
+const getPageIndex = (config: BaseTabConfig): Nullable<Element> => {
   const queryString = tabElementQueryString(config.staticConfig, 'hiddenPageIndex')
   return config.runtimeConfig.tabRoot.querySelector(queryString)?.querySelector(queryString)
 }
 
-const getNavigation = (config: TabConfig): Nullable<TabElements['navigation']> => {
+const getNavigation = (config: BaseTabConfig): Nullable<TabElements['navigation']> => {
   const pageIndex = getPageIndex(config)
 
   if (isNil(pageIndex)) {
@@ -74,12 +80,12 @@ const getNavigation = (config: TabConfig): Nullable<TabElements['navigation']> =
   }
 }
 
-const getSelectedImagePath = (config: TabConfig): Nullable<HTMLTextAreaElement> => {
+const getSelectedImagePath = (config: BaseTabConfig): Nullable<HTMLTextAreaElement> => {
   return config.runtimeConfig.tabRoot.querySelector(tabElementQueryString(config.staticConfig, 'selectedImagePath'))
     ?.querySelector('textarea')
 }
 
-const getImageSrcs = (config: TabConfig): Nullable<TabElements['imageSrcs']> => {
+const getImageSrcs = (config: BaseTabConfig): Nullable<TabElements['imageSrcs']> => {
   const placeholder = null
   const selectedImage = getSelectedImagePath(config)
 
@@ -120,50 +126,44 @@ const getImageSrcs = (config: TabConfig): Nullable<TabElements['imageSrcs']> => 
   return imageSrcs
 }
 
-const getMoveToThisTabButtons = (config: TabConfig): HTMLButtonElement[] => {
-  return config.otherTabs
-    .map((otherTab) => {
-      const query = tabElementQueryString(config.staticConfig, 'moveToButton', withPrefix(otherTab.runtimeConfig.tabId, config.runtimeConfig.tabId))
-      return config.runtimeConfig.appRoot.querySelector<HTMLButtonElement>(query)
-    })
-    .filter(isNotNil)
-}
-
-const getRefreshButton = (config: TabConfig): Nullable<HTMLButtonElement> => {
+const getRefreshButton = (config: BaseTabConfig): Nullable<HTMLButtonElement> => {
   return config.runtimeConfig.tabRoot.querySelector<HTMLButtonElement>(tabElementQueryString(config.staticConfig, 'refreshButton'))
 }
 
-const getImageButtons = (config: TabConfig): HTMLButtonElement[] => {
+const getImageButtons = (config: BaseTabConfig): HTMLButtonElement[] => {
   return Array.from(config.runtimeConfig.tabRoot.querySelectorAll(tabElementQueryString(config.staticConfig, 'imgButton')))
 }
 
-const getProgressBar = (config: TabConfig): Nullable<Element> => {
+const getProgressBar = (config: BaseTabConfig): Nullable<Element> => {
   const id = `#${withSuffix(config.staticConfig.suffixes.progressBar, config.runtimeConfig.tabId)}`
 
   // ¯\_(ツ)_/¯
   return config.runtimeConfig.appRoot.querySelector(id)?.querySelector(id)
 }
 
-const getGallery = (config: TabConfig): Nullable<Element> => {
+const getGallery = (config: BaseTabConfig): Nullable<Element> => {
   return config.runtimeConfig.tabRoot.querySelector(tabElementQueryString(config.staticConfig, 'gallery'))
 }
 
-const getGalleryContainer = (config: TabConfig): Nullable<Element> => {
+const getGalleryContainer = (config: BaseTabConfig): Nullable<Element> => {
   return config.runtimeConfig.tabRoot.querySelector(tabElementQueryString(config.staticConfig, 'galleryContainer'))
 }
 
-const getGenerateMissingThumbnailsButton = (config: TabConfig): Nullable<HTMLButtonElement> => {
+const getGenerateMissingThumbnailsButton = (config: BaseTabConfig): Nullable<HTMLButtonElement> => {
   return config.runtimeConfig.appRoot.querySelector<HTMLButtonElement>(`#${withPrefix(config.staticConfig.suffixes.generateThumbnailsButton, config.staticConfig.extensionId)}`)
 }
 
-const getGenerateMissingThumbnailsContainer = (config: TabConfig): Nullable<HTMLButtonElement> => {
+const getGenerateMissingThumbnailsContainer = (config: BaseTabConfig): Nullable<HTMLButtonElement> => {
   return config.runtimeConfig.appRoot.querySelector<HTMLButtonElement>(`#${withPrefix(config.staticConfig.suffixes.generateThumbnailsContainer, config.staticConfig.extensionId)}`)
 }
 
-const getElements = (config: TabConfig): Nullable<TabElements> => {
+const getDeselectImageButton = (config: BaseTabConfig): Nullable<HTMLButtonElement> => {
+  return config.runtimeConfig.tabRoot.querySelector<HTMLButtonElement>(tabElementQueryString(config.staticConfig, 'deselectImageButton'))
+}
+
+export const getElements = (config: BaseTabConfig): Nullable<TabElements> => {
   const imageButtons = getImageButtons(config)
   const refreshButton = getRefreshButton(config)
-  const moveToThisTabButtons = getMoveToThisTabButtons(config)
   const progressBar = getProgressBar(config)
   const generateThumbnailsButton = getGenerateMissingThumbnailsButton(config)
   const generateThumbnailsContainer = getGenerateMissingThumbnailsContainer(config)
@@ -171,12 +171,15 @@ const getElements = (config: TabConfig): Nullable<TabElements> => {
   const gallery = getGallery(config)
   const galleryContainer = getGalleryContainer(config)
   const navigation = getNavigation(config)
+  const tabInfo = getTabInfo(config)
+  const deselectImageButton = getDeselectImageButton(config)
 
-  if (isNil(refreshButton) || isNil(imageSrcs) || isNil(gallery) || isNil(galleryContainer) || isNil(navigation)) {
+  if (isNil(refreshButton) || isNil(imageSrcs) || isNil(gallery) || isNil(galleryContainer) || isNil(navigation) || isNil(tabInfo) || isNil(deselectImageButton)) {
     return null
   }
 
   return {
+    tabInfo,
     gallery: {
       gallery,
       container: galleryContainer
@@ -184,8 +187,8 @@ const getElements = (config: TabConfig): Nullable<TabElements> => {
     buttons: {
       images: imageButtons,
       refresh: refreshButton,
-      moveToThisTab: moveToThisTabButtons,
-      generateThumbnails: generateThumbnailsButton
+      generateThumbnails: generateThumbnailsButton,
+      deselectImage: deselectImageButton
     },
     generateMissingThumbnailsContainer: generateThumbnailsContainer,
     imageSrcs,
@@ -198,5 +201,3 @@ const getElements = (config: TabConfig): Nullable<TabElements> => {
     }
   }
 }
-
-export default getElements

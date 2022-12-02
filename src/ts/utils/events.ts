@@ -1,5 +1,8 @@
 import { isString } from 'lodash'
+
+import { eq } from './fn'
 import { isArrayOf } from './guards'
+import { toLowerCase } from './str'
 
 export enum Keys {
   ArrowRight = 'ArrowRight',
@@ -10,9 +13,10 @@ export enum Keys {
 }
 
 export const onKey = (selectedKey: string | string[], callback: () => void) => (e: KeyboardEvent) => {
-  const keys = isArrayOf(selectedKey, isString) ? selectedKey : [selectedKey]
+  const keys = (isArrayOf(selectedKey, isString) ? selectedKey : [selectedKey]).map(toLowerCase)
+  const parsedPressedKey = toLowerCase(e.key)
 
-  if (keys.some((key) => key === e.key)) {
+  if (keys.some(eq(parsedPressedKey))) {
     e.preventDefault()
     callback()
   }

@@ -1,5 +1,5 @@
 import re
-import os
+from os import path
 
 from typing import cast, List, Union, Callable, TypedDict
 from modules.shared import Options
@@ -10,6 +10,19 @@ from src.py.modules.shared.int import strToNullableInt
 from src.py.modules.shared.guards import isNotEmpty, isEmpty
 from src.py.modules.shared.str import withPrefix
 
+
+StringGetter = Callable[[str], str]
+FlagGetter = Callable[[str], bool]
+TabSizeLimits = dict[str, Union[int, None]]
+TabKeybinds = dict[str, str]
+
+class TabConfigGetters(TypedDict):
+  path: StringGetter
+  moveToEnabled: FlagGetter
+  sendToEnabled: FlagGetter
+
+disallowedTabName = 'dontcallatablikethisoritwillgetoverwritten'
+
 def getRuntimeConfig(opts: Options, staticConfig: StaticConfig, defaultConfig: ConfigurableConfig) -> RuntimeConfig:
   configAsDict = cast(RuntimeConfig, { key: opts.__getattr__(getConfigFieldId(staticConfig, key)) for key in defaultConfig.keys() })
 
@@ -17,6 +30,7 @@ def getRuntimeConfig(opts: Options, staticConfig: StaticConfig, defaultConfig: C
   configAsDict["pageColumns"] = int(configAsDict["pageColumns"])
   configAsDict["pageRows"] = int(configAsDict["pageRows"])
   configAsDict["preloadPages"] = int(configAsDict["preloadPages"])
+  configAsDict["root"] = path.normpath(configAsDict["root"])
 
   return cast(RuntimeConfig, configAsDict)
 
@@ -35,54 +49,58 @@ def normalizeTabName(tabName: str) -> str:
 def getTabId(tabName: str) -> str:
   return re.sub(r'\s', "_", normalizeTabName(tabName).lower())
 
-TabSizeLimits = dict[str, Union[int, None]];
+def getTabConfigPairs(configStr: str) -> list[tuple[str, str]]:
+  def getPair(possiblePair: str) -> Union[tuple[str, str], None]:
+    if isEmpty(possiblePair) or possiblePair.count(":") != 1:
+      return None
+    tabName, configValue = possiblePair.split(":")
+
+    if (isEmpty(tabName) or isEmpty(configValue)):
+      return None
+
+    return (getTabId(tabName), configValue)
+  return [pair for pair in map(getPair, configStr.split(',')) if pair is not None]
+
+def getTabKeybinds(config: RuntimeConfig) -> TabKeybinds:
+  return dict(getTabConfigPairs(config["tabKeybinds"]))
 
 def getTabLimits(config: RuntimeConfig) -> TabSizeLimits:
-  def getLimit(configPair: str) -> tuple[str, Union[int, None]]:
-    if isEmpty(configPair) or configPair.count(":") != 1:
-      # ideally would return none, but python doesn't have actual type guards,
-      # so instead return something that should never be accessed
-      return ("dontcallatablikethisoritwillgetoverwritten", None)
-
-    tabName, limit = configPair.split(":")
+  def getLimit(configPair: tuple[str, str]) -> tuple[str, Union[None, int]]:
+    tabName, limit = configPair
     return (getTabId(tabName), strToNullableInt(limit))
 
-  return dict(map(getLimit, config["maxTabsSizes"].split(",")))
+  return dict(map(getLimit, getTabConfigPairs(config["maxTabsSizes"])))
 
-PathGetter = Callable[[str, str], str]
-
-def makeGetCustomTabPath(config: RuntimeConfig) -> PathGetter:
-  def getCustomTabPath(tabName: str, tabId: str) -> str:
-    return os.path.join(config["root"], tabId)
+def makeGetCustomTabPath(config: RuntimeConfig) -> StringGetter:
+  def getCustomTabPath(tabId: str) -> str:
+    return path.join(config["root"], tabId)
 
   return getCustomTabPath
 
-def makeGetBuiltinTabPath(config: StaticConfig) -> PathGetter:
-  def getBuiltinTabPath(tabName: str, tabId: str) -> str:
-    return config["builtinTabs"][tabName]["path"]
+def makeGetBuiltinTabPath(config: StaticConfig) -> StringGetter:
+  def getBuiltinTabPath(tabId: str) -> str:
+    return config["builtinTabs"][tabId]["path"]
 
   return getBuiltinTabPath
 
-FlagGetter = Callable[[str, str], bool]
-
-class TabConfigGetters(TypedDict):
-  path: PathGetter
-  moveToEnabled: FlagGetter
-  sendToEnabled: FlagGetter
-
 def makeGenerateTabConfig(globalConfig: GlobalConfig, getters: TabConfigGetters):
   limits = getTabLimits(globalConfig["runtimeConfig"])
+  keybinds = getTabKeybinds(globalConfig["runtimeConfig"])
 
   def generateTabConfig(tabName: str) -> BaseTabConfig:
     tabId = getTabId(tabName)
+    tabPath = path.normpath(getters["path"](tabId))
+    thumbnailsPath = tabPath + globalConfig["staticConfig"]["thumbnails"]["folderSuffix"]
+
     return {
-      "displayName": tabName,
       "id": tabId,
+      "displayName": tabName,
+      "keybind": keybinds[tabId] if tabId in keybinds else None,
       "maxSize": limits[tabId] if tabId in limits else None,
-      "path": getters["path"](tabName, tabId),
-      "thumbnailsPath": getters["path"](tabName, tabId) + globalConfig["staticConfig"]["thumbnails"]["folderSuffix"],
-      "moveToEnabled": getters["moveToEnabled"](tabName, tabId),
-      "sendToEnabled": getters["sendToEnabled"](tabName, tabId),
+      "path": tabPath,
+      "thumbnailsPath": thumbnailsPath,
+      "moveToEnabled": getters["moveToEnabled"](tabId),
+      "sendToEnabled": getters["sendToEnabled"](tabId),
     }
 
   return generateTabConfig
@@ -109,8 +127,8 @@ def getCustomTabsConfigs(globalConfig: GlobalConfig) -> List[SingleTabConfig]:
     list(filter(isNotEmpty, map(normalizeTabName, globalConfig["runtimeConfig"]["tabs"].split(',')))),
     {
       "path": makeGetCustomTabPath(globalConfig["runtimeConfig"]),
-      "moveToEnabled": lambda _, __: True, # all custom tabs are allowed to be moved into,
-      "sendToEnabled": lambda _, __: False # all custom tabs are not allowed to be sent into
+      "moveToEnabled": lambda _,: True, # all custom tabs are allowed to be moved into,
+      "sendToEnabled": lambda _,: False # all custom tabs are not allowed to be sent into
     }
 
   )
@@ -118,11 +136,11 @@ def getCustomTabsConfigs(globalConfig: GlobalConfig) -> List[SingleTabConfig]:
 def getBuiltinTabsConfig(globalConfig: GlobalConfig) -> List[SingleTabConfig]:
   return getTabConfigs(
     globalConfig,
-    list(globalConfig["staticConfig"]["builtinTabs"].keys()),
+    [tab["displayName"] for tab in globalConfig["staticConfig"]["builtinTabs"].values()],
     {
       "path": makeGetBuiltinTabPath(globalConfig["staticConfig"]),
-      "moveToEnabled": lambda tabName, tabId: globalConfig["staticConfig"]["builtinTabs"][tabName]["moveToEnabled"],
-      "sendToEnabled": lambda tabName, tabId: globalConfig["staticConfig"]["builtinTabs"][tabName]["sendToEnabled"],
+      "moveToEnabled": lambda tabId: globalConfig["staticConfig"]["builtinTabs"][tabId]["moveToEnabled"],
+      "sendToEnabled": lambda tabId: globalConfig["staticConfig"]["builtinTabs"][tabId]["sendToEnabled"],
     }
   )
 

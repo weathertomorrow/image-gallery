@@ -1,4 +1,4 @@
-const staticConfig = {
+export const staticConfig = {
   gradio: {
     appTag: 'gradio-app',
     hiddenElementCSSClass: '!hidden',
@@ -31,27 +31,8 @@ const staticConfig = {
     generateThumbnailsContainer: 'generateThumbnailsContainer',
     selectedImagePath: 'selectedImagePath',
     navigationControllsContainer: 'navigationControllsContainer',
-    hiddenPageIndex: 'hiddenPageIndex'
+    hiddenPageIndex: 'hiddenPageIndex',
+    hiddenTabInfo: 'hiddenTabInfo',
+    deselectImageButton: 'deselectImageButton'
   }
 } as const
-export type StaticConfig = typeof staticConfig
-
-export type RuntimeConfig = Readonly<{
-  tabId: string
-  appRoot: ShadowRoot
-  tabRoot: HTMLElement
-  preloadRoot: Element
-  bigPictureRoot: Element
-  gradioContainer: Element
-}>
-
-export type BaseTabConfig = Readonly<{
-  staticConfig: StaticConfig
-  runtimeConfig: RuntimeConfig
-}>
-
-export type TabConfig = BaseTabConfig & Readonly<{
-  otherTabs: BaseTabConfig[]
-}>
-
-export default staticConfig

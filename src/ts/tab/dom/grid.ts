@@ -1,5 +1,6 @@
 import { isNil } from 'lodash'
-import { Nullable } from '../utils/types'
+
+import { Nullable } from '../../utils/types'
 
 type Coordinates = Readonly<{
   row: number

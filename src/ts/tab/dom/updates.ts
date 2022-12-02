@@ -1,14 +1,21 @@
-import { debounce, isNil } from 'lodash'
-import { TabConfig } from '../config'
-import { generateClassName } from '../utils/elements'
-import { call } from '../utils/fn'
+import { debounce, defer, first, isNil, last } from 'lodash'
 
-import { Nullable } from '../utils/types'
-import { getFirstImageInTab, getLastImageInTab, TabElements } from './elements'
-import { emitClick, emitFocus } from './events'
+import { TabConfig } from '../../config/types'
+import { TabElements } from '../../elements/tab'
+
+import { scrollToElement } from '../../utils/dom'
+import { call } from '../../utils/fn'
+import { withPrefix } from '../../utils/str'
+import { Nullable } from '../../utils/types'
+import { emitClick, emitFocus } from '../events/emitters'
+import { SelectedImageCallback, ImageSourcesCallback } from '../events/listeners'
+import { findButtonForImage, getSelectedImagePath, toLocalImagePath } from '../utils'
+
 import { extractImageSrcs, ImagesElements, UpdateImages } from './images'
-import { SelectedImageCallback, ImageSourcesCallback } from './listeners'
-import { findButtonForImage, getSelectedImagePath, scrollToElement, toLocalImagePath } from './utils'
+
+const generateClassName = (config: TabConfig, element: keyof TabConfig['staticConfig']['css']['classesSuffixes']): string => {
+  return withPrefix(config.staticConfig.css.classPrefix, config.staticConfig.css.classesSuffixes[element])
+}
 
 export const makeShowLoading = (config: TabConfig, element: Nullable<HTMLElement>) => () => {
   if (isNil(element)) {
@@ -45,7 +52,9 @@ const turnToImageBrowsing = (config: TabConfig, elements: TabElements, selectedI
   } else {
     elements.MUTABLE.selectedImage = createImagePreviewNode(config, elements, selectedImageSrc)
     onImageCreated(elements.MUTABLE.selectedImage)
+
     scrollToElement(findButtonForImage(elements, selectedImageSrc))
+    defer(() => scrollToElement(elements.gallery.container, false))
   }
 }
 
@@ -119,11 +128,11 @@ export const makeClickSiblingToSelectedImage = (type: 'previous' | 'next', eleme
     scrollToElement(sibling)
   } else if (isNil(sibling)) {
     if (type === 'next') {
-      const firstImage = getFirstImageInTab(elements)
+      const firstImage = first(elements.buttons.images)
       events.forEach(call(firstImage))
       scrollToElement(firstImage)
     } else {
-      const lastImage = getLastImageInTab(elements)
+      const lastImage = last(elements.buttons.images)
       events.forEach(call(lastImage))
       scrollToElement(lastImage)
     }

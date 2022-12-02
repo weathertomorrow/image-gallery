@@ -1,9 +1,12 @@
 import { debounce, isNil } from 'lodash'
-import { TabConfig } from '../config'
-import { call, invoke } from '../utils/fn'
-import { Nullable } from '../utils/types'
-import { TabElements } from './elements'
-import { extractImageSrcs, PreloadImages } from './images'
+
+import { TabConfig } from '../../config/types'
+import { TabElements } from '../../elements/tab'
+
+import { call, invoke } from '../../utils/fn'
+import { Nullable } from '../../utils/types'
+import { extractImageSrcs, PreloadImages } from '../dom/images'
+
 import {
   makeGenerateThumbnailsListener,
   makeImageSourcesListener,

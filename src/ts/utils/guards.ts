@@ -29,6 +29,11 @@ export function isEmpty<T> (arg: T): boolean {
   return false
 }
 
+export const isObjectWithKeys = <T>(
+  arg: unknown,
+  requiredKeys: Array<keyof T>
+): arg is T => isLiteral(arg) && requiredKeys.every((key) => key in arg)
+
 export const isObjectWithPartialKeys = <T>(
   arg: unknown,
   requiredKeys: Array<keyof T>
