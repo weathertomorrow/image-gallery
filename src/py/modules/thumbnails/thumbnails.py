@@ -11,21 +11,17 @@ from src.py.modules.thumbnails.logic.types import MUTABLE_getImagesWithMissisngT
 
 htmlInfoMessage = {
   "missingThumbnails": '<p style="text-align: center; color: red">Some thumbnails are missing</p>',
-  "generatingThumbnails": '<p style="text-align: center;">Thumbnails are being generated (make take a while)…</br>You can use the gallery normally</p>'
+  "generatingThumbnails": '<p style="text-align: center;">Thumbnails are being generated (make take a while)…</p>'
 }
 
-def makeGenerateThumbnails(tabConfigs: list[TabConfig], outputsFromTabs: MUTABLE_getImagesWithMissisngThumbnailsOutputs):
+def makeGenerateThumbnails(outputsFromTabs: MUTABLE_getImagesWithMissisngThumbnailsOutputs):
   def generateThumbnails(_: float):
     threads: list[Thread]  = []
-    threadOutputs = outputsFromTabs
 
-    for tabConfig in tabConfigs:
-      tabThreadOutput = threadOutputs[tabConfig["id"]]
-
-      if (isMissingThumbnails(tabThreadOutput)):
-        thread = Thread(target = THREAD_generateThumbnails, args = (tabConfig, tabThreadOutput))
-        threads.append(thread)
-        thread.start()
+    for chunk in splitThreadOutputsEvenly(outputsFromTabs, 10):
+      thread = Thread(target = THREAD_generateThumbnails, args = (chunk,))
+      threads.append(thread)
+      thread.start()
 
     for thread in threads:
       thread.join()
@@ -59,7 +55,7 @@ def hadleMissingThumbnails(tabsConfigs: list[TabConfig]):
         # change of this actually generates thumbnails, clicking a button triggers the change and shows loading
         hiddenCounter = gradio.Number(value = 0, visible = False)
         # not sure why gradio doesnt want the row as output, it works fine
-        hiddenCounter.change(makeGenerateThumbnails(tabsConfigs, threadOutputs), [hiddenCounter], cast(None, container))
+        hiddenCounter.change(makeGenerateThumbnails(threadOutputs), [hiddenCounter], cast(None, container))
 
         button = gradio.Button(value = 'Generate missing thumbnails (may take a while)', elem_id = getExtensionElementId(staticConfig["elementsSuffixes"]["generateThumbnailsButton"], staticConfig))
         button.click(onButtonClick, None, [hiddenCounter, messageContainer, button])

@@ -8,18 +8,26 @@ from src.py.modules.shared.mutable import getImagesInDirRef
 from src.py.modules.shared.list import chunk
 
 from src.py.modules.thumbnails.logic.checks import makeIsMissingThumbnail
-from src.py.modules.thumbnails.logic.types import MUTABLE_getImagesWithMissisngThumbnailsOutputs, GetImagesWithMissingThumbnailsOutput
+from src.py.modules.thumbnails.logic.types import MUTABLE_getImagesWithMissisngThumbnailsOutputs, GetImagesWithMissingThumbnailsOutput, MissingThumbnail
 from src.py.modules.shared.names import getThumbnailNameFromImageName
 
-def aggregateMissingThumbnails(aggregator: list[DirEntry[str]], entries: GetImagesWithMissingThumbnailsOutput) -> list[DirEntry[str]]:
+def aggregateMissingThumbnails(aggregator: list[MissingThumbnail], entries: GetImagesWithMissingThumbnailsOutput) -> list[MissingThumbnail]:
   return aggregator + entries["output"]
 
-def splitThreadOutputsEvenly(outputs: MUTABLE_getImagesWithMissisngThumbnailsOutputs) -> MUTABLE_getImagesWithMissisngThumbnailsOutputs:
-  tabIds = outputs.keys()
-  missingThumbnailsChunks = chunk(reduce(aggregateMissingThumbnails, outputs.values(), []), len(tabIds))
+SplitOutputsChunks = list[list[MissingThumbnail]]
+def splitThreadOutputsEvenly(outputs: MUTABLE_getImagesWithMissisngThumbnailsOutputs, threadAmount: int) -> SplitOutputsChunks:
+  missingThumbnailsChunks = chunk(reduce(aggregateMissingThumbnails, outputs.values(), []), threadAmount)
 
-  return { tabId: { "output": missingThumbnailsChunks[index] } for (index, tabId) in enumerate(tabIds) }
+  return [ missingThumbnailsChunks[index] for index in range(0, threadAmount) ]
 
+def makeWithTabConfig(tabConfig: TabConfig):
+  def withTabConfig(entry: DirEntry[str]) -> MissingThumbnail:
+    return {
+      "forImage": entry,
+      "forTab": tabConfig
+    }
+
+  return withTabConfig
 
 def THREAD_getImagesWithMissingThumbnails(tabConfig: TabConfig, outputs: MUTABLE_getImagesWithMissisngThumbnailsOutputs) -> None:
   makeDirIfMissing(tabConfig["path"])
@@ -28,14 +36,13 @@ def THREAD_getImagesWithMissingThumbnails(tabConfig: TabConfig, outputs: MUTABLE
   allImagesInDir = getImagesInDirRef(tabConfig, tabConfig["path"])
   allThumbnailsInDirDict = { image.name: None for image in getImagesInDirRef(tabConfig, tabConfig["thumbnailsPath"])["images"] }
 
-  output = outputs[tabConfig["id"]]
-  output["output"] = list(filter(makeIsMissingThumbnail(tabConfig, allThumbnailsInDirDict), allImagesInDir["images"]))
+  outputs[tabConfig["id"]]["output"] = list(map(makeWithTabConfig(tabConfig), filter(makeIsMissingThumbnail(tabConfig, allThumbnailsInDirDict), allImagesInDir["images"])))
 
+def THREAD_generateThumbnails(missingThumbnails: list[MissingThumbnail]) -> None:
+  for missingThumbnail in missingThumbnails:
+    tabConfig = missingThumbnail["forTab"]
+    thumbnailSize = tabConfig["staticConfig"]["thumbnails"]["maxSize"]
 
-def THREAD_generateThumbnails(tabConfig: TabConfig, missingThumbnails: GetImagesWithMissingThumbnailsOutput) -> None:
-  thumbnailSize = tabConfig["staticConfig"]["thumbnails"]["maxSize"]
-
-  for missingThumbnail in missingThumbnails["output"]:
-    image = Image.open(missingThumbnail.path)
+    image = Image.open(missingThumbnail["forImage"].path)
     image.thumbnail((thumbnailSize, thumbnailSize))
-    image.save(path.join(tabConfig["thumbnailsPath"], getThumbnailNameFromImageName(tabConfig, missingThumbnail.name)))
+    image.save(path.join(tabConfig["thumbnailsPath"], getThumbnailNameFromImageName(tabConfig, missingThumbnail["forImage"].name)))
