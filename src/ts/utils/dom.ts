@@ -11,4 +11,8 @@ export const scrollToElement = (element: Nullable<Element>, nearest = true): voi
   element?.scrollIntoView({ behavior: 'smooth', block: nearest ? 'nearest' : undefined })
 }
 
+export const makeScrollToElement = (element: Nullable<Element>, nearest?: boolean) => () => {
+  return scrollToElement(element, nearest)
+}
+
 export const contains = (el: HTMLElement) => (parent: HTMLElement) => parent.contains(el)

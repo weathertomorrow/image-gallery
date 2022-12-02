@@ -1,3 +1,5 @@
+import { defer } from 'lodash'
+
 export const withEffect = <T>(arg: T, effect: (arg: T) => unknown): T => {
   effect(arg)
   return arg
@@ -21,3 +23,11 @@ export function flow<A, B, C, D, E, F> (_funl: Fun<A, B>, _fun2?: Fun<B, C>, _fu
 export const prop = <T extends string>(key: T) => <U extends Record<T, unknown>>(arg: U): U[T] => arg[key]
 
 export const eq = (arg: unknown) => (other: unknown) => arg === other
+
+export const makeDefer = (fn: () => void) => () => {
+  defer(fn)
+}
+
+export const wrapped = (fn: (...args: unknown[]) => void) => () => {
+  fn()
+}
