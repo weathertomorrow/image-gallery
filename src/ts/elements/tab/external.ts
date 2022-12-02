@@ -3,8 +3,7 @@ import { ConfigWithOtherTabs } from '../../config'
 import { isNotNil } from '../../utils/guards'
 import { withPrefix } from '../../utils/str'
 import { Nullable } from '../../utils/types'
-
-import { tabElementQueryString } from './utils'
+import { extensionElementById } from '../utils'
 
 export type ExternalElements = Readonly<{
   moveToThisTabButtons: HTMLButtonElement[]
@@ -13,7 +12,7 @@ export type ExternalElements = Readonly<{
 export const getMoveToThisTabButtons = (config: ConfigWithOtherTabs): HTMLButtonElement[] => {
   return config.otherTabs
     .map((otherTab) => {
-      const query = tabElementQueryString(config.staticConfig, 'moveToButton', withPrefix(otherTab.runtimeConfig.tabId, config.runtimeConfig.tabId))
+      const query = extensionElementById(config.staticConfig, 'moveToButton', withPrefix(otherTab.runtimeConfig.tabId, config.runtimeConfig.tabId))
       return config.runtimeConfig.appRoot.querySelector<HTMLButtonElement>(query)
     })
     .filter(isNotNil)

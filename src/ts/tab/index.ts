@@ -1,9 +1,10 @@
 import { isNil } from 'lodash'
 
 import { TabConfig } from '../config/types'
+import { makeGetSwitchToThisTabButton } from '../elements/tab'
 import { contains } from '../utils/dom'
 import { Keys, onKey } from '../utils/events'
-import { flow, prop, withEffect } from '../utils/fn'
+import { flow, prop, withEffect, wrapped } from '../utils/fn'
 
 import { extractGridDimensions, updateGridCssVariables } from './dom/grid'
 import { extractImageSrcs, insertImagesIntoButtons, makeChangeImagesVisiblity, makePreloadImages, makeUpdateImages } from './dom/images'
@@ -33,30 +34,30 @@ export const initTab = (config: TabConfig): void => {
   })
 
   const selection = makeUpdateSelection(config, tabElements)
-  const bigPicture = makeBigPictureModeHandlers(config, tabElements)
+  const bigPictureControls = makeBigPictureModeHandlers(config, tabElements)
 
   observers.mainPageSource([makeOnMainPageSourcesChanged(config, images, resetLoadingPrevPage, makeUpdateImages(aggregatedLoadListener, selection.onPageChange))])
   observers.preloadedPagesSources([makePreloadImages(config.runtimeConfig.preloadRoot)])
   observers.progressBarObserver([refresh])
   observers.generateThumbnailsObserver([refresh])
-  observers.selectedImageObserver([makeUpdateGalleryModes(config, tabElements, makeHTMLEventListener('click', bigPicture.open)), selection.onImageChange, bigPicture.update])
+  observers.selectedImageObserver([makeUpdateGalleryModes(config, tabElements, makeHTMLEventListener('click', bigPictureControls.open)), selection.onImageChange, bigPictureControls.update])
 
   externalElements.moveToThisTabButtons.forEach(makeHTMLEventListener('click', refresh))
   tabElements.buttons.generateThumbnails?.addEventListener('click', makeShowLoading(config, tabElements.buttons.generateThumbnails))
-  tabElements.buttons.images.forEach(makeHTMLEventListener('click', bigPicture.open, makeIsSelectedButton(tabElements)))
-  config.runtimeConfig.bigPictureRoot.addEventListener('click', bigPicture.close)
+  config.runtimeConfig.bigPictureRoot.addEventListener('click', bigPictureControls.close)
+  tabElements.buttons.images.forEach(makeHTMLEventListener('click', ifInBigPictureMode(config.runtimeConfig, bigPictureControls), makeIsSelectedButton(tabElements)))
 
   window.addEventListener('keydown', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowDown], makeClickSiblingToSelectedImage('next', tabElements))))
   window.addEventListener('keydown', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowUp], makeClickSiblingToSelectedImage('previous', tabElements))))
   window.addEventListener('keydown', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowLeft], makeEmitClick(tabElements.navigation.buttons.prevPage))))
   window.addEventListener('keydown', ifTabActive(config.runtimeConfig, onKey([Keys.ArrowRight], makeEmitClick(tabElements.navigation.buttons.nextPage))))
   window.addEventListener('keydown', ifTabActive(config.runtimeConfig, onKey([Keys.Esc], ifInBigPictureMode(config.runtimeConfig, {
-    if: bigPicture.close,
+    if: bigPictureControls.close,
     else: makeEmitClick(tabElements.buttons.deselectImage)
   }))))
 
   if (!isNil(tabInfo.keybind)) {
-    window.addEventListener('keydown', onKey([tabInfo.keybind], () => {
+    window.addEventListener('keydown', onKey([tabInfo.keybind], { shift: false }, () => {
       externalElements.moveToThisTabButtons.forEach((button) => {
         const containingTab = config.otherTabs.find(flow(prop('runtimeConfig'), prop('tabRoot'), contains(button)))
 
@@ -65,5 +66,7 @@ export const initTab = (config: TabConfig): void => {
         }
       })
     }))
+
+    window.addEventListener('keydown', onKey([tabInfo.keybind], { shift: true }, wrapped(flow(makeGetSwitchToThisTabButton(config), emitClick))))
   }
 }

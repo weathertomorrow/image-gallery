@@ -1,9 +1,11 @@
 import { isNil, last } from 'lodash'
 
-import { RuntimeConfig } from '../config/types'
-import { TabElements } from '../elements/tab'
-import { isEmpty } from '../utils/guards'
-import { Nullable } from '../utils/types'
+import { RuntimeConfig } from '../../config/types'
+import { TabElements } from '../../elements/tab'
+
+import { isEmpty } from '../../utils/guards'
+import { Nullable } from '../../utils/types'
+import { BigPictureModeHandlers } from '../dom/updates'
 
 export const isTabActive = (runtimeConfig: RuntimeConfig): boolean => runtimeConfig.tabRoot.style.display !== 'none'
 export const isInBigPictureMode = (runtimeConfig: RuntimeConfig): boolean => runtimeConfig.bigPictureRoot.children.length !== 0
@@ -22,12 +24,16 @@ type IfInBigPictureModeArg = Readonly<{
   else: () => void
 }>
 
-export const ifInBigPictureMode = (runtimeConfig: RuntimeConfig, callbacks: IfInBigPictureModeArg) => {
+export const ifInBigPictureMode = (runtimeConfig: RuntimeConfig, callbacks: IfInBigPictureModeArg | BigPictureModeHandlers): () => void => {
+  const handlers = 'if' in callbacks
+    ? callbacks
+    : { if: callbacks.close, else: callbacks.open }
+
   return () => {
     if (isInBigPictureMode(runtimeConfig)) {
-      return callbacks.if()
+      return handlers.if()
     } else {
-      return callbacks.else()
+      return handlers.else()
     }
   }
 }

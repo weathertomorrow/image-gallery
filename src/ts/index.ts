@@ -1,6 +1,6 @@
 import { getConfigWithExternalElements, getConfigWithOtherTabs, getConfigWithTabInfo, makeGetConfigWithElements } from './config'
 import { staticConfig } from './config/staticConfig'
-import { tabElementQueryString } from './elements/tab/utils'
+import { extensionElementById } from './elements/utils'
 import { initTab } from './tab'
 import { createEmptyContainer } from './utils/dom'
 import { flow } from './utils/fn'
@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ?.shadowRoot
 
     Array.from(appRoot
-      ?.querySelector(tabElementQueryString(staticConfig, 'extensionTab'))
-      ?.querySelectorAll<HTMLElement>(tabElementQueryString(staticConfig, 'galleryTab')) ?? []
+      ?.querySelector(extensionElementById(staticConfig, 'extensionTab'))
+      ?.querySelectorAll<HTMLElement>(extensionElementById(staticConfig, 'galleryTab')) ?? []
     )
       .map(flow(makeGetConfigWithElements({ staticConfig, appRoot, preloadRoot }), getConfigWithTabInfo))
       .map(getConfigWithOtherTabs)

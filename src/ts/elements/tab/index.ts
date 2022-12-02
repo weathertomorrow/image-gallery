@@ -1,12 +1,12 @@
-import { isEmpty, isNil } from 'lodash'
+import { flow, isEmpty, isNil } from 'lodash'
 
 import { BaseTabConfig } from '../../config/types'
 
+import { eq, prop } from '../../utils/fn'
 import { isNotNil } from '../../utils/guards'
 import { withPrefix, withSuffix } from '../../utils/str'
 import { MutableObject, Nullable } from '../../utils/types'
-
-import { tabElementQueryString } from './utils'
+import { extensionElementById, makeExtractTabId } from '../utils'
 
 export type TabElements = Readonly<{
   progressBar: Nullable<Element>
@@ -43,13 +43,26 @@ export type TabElements = Readonly<{
   }
 }>
 
+// has to be handled separately because gradio actually removes the tab buttons and replaces them with new ones on some UI interactions.
+// hence why this needs to be queried for each time you want to use it
+export const makeGetSwitchToThisTabButton = (config: BaseTabConfig) => (): Nullable<HTMLButtonElement> => {
+  const buttons = Array.from(config.runtimeConfig.extensionRoot.children?.[0]?.querySelectorAll<HTMLButtonElement>('button') ?? [])
+  const button = buttons.find(flow(prop('innerHTML'), makeExtractTabId(config.staticConfig), eq(config.runtimeConfig.tabId)))
+
+  if (isNil(button)) {
+    return null
+  }
+
+  return button
+}
+
 const getTabInfo = (config: BaseTabConfig): Nullable<Element> => {
-  const queryString = tabElementQueryString(config.staticConfig, 'hiddenTabInfo')
+  const queryString = extensionElementById(config.staticConfig, 'hiddenTabInfo')
   return config.runtimeConfig.tabRoot.querySelector(queryString)?.querySelector(queryString)
 }
 
 const getPageIndex = (config: BaseTabConfig): Nullable<Element> => {
-  const queryString = tabElementQueryString(config.staticConfig, 'hiddenPageIndex')
+  const queryString = extensionElementById(config.staticConfig, 'hiddenPageIndex')
   return config.runtimeConfig.tabRoot.querySelector(queryString)?.querySelector(queryString)
 }
 
@@ -60,7 +73,7 @@ const getNavigation = (config: BaseTabConfig): Nullable<TabElements['navigation'
     return null
   }
 
-  const buttons = Array.from(config.runtimeConfig.tabRoot.querySelector(tabElementQueryString(config.staticConfig, 'navigationControllsContainer'))
+  const buttons = Array.from(config.runtimeConfig.tabRoot.querySelector(extensionElementById(config.staticConfig, 'navigationControllsContainer'))
     ?.querySelectorAll('button') ?? [])
 
   if (isEmpty(buttons) || buttons.length !== 4) {
@@ -81,7 +94,7 @@ const getNavigation = (config: BaseTabConfig): Nullable<TabElements['navigation'
 }
 
 const getSelectedImagePath = (config: BaseTabConfig): Nullable<HTMLTextAreaElement> => {
-  return config.runtimeConfig.tabRoot.querySelector(tabElementQueryString(config.staticConfig, 'selectedImagePath'))
+  return config.runtimeConfig.tabRoot.querySelector(extensionElementById(config.staticConfig, 'selectedImagePath'))
     ?.querySelector('textarea')
 }
 
@@ -100,7 +113,7 @@ const getImageSrcs = (config: BaseTabConfig): Nullable<TabElements['imageSrcs']>
     selected: selectedImage
   }
 
-  const imageSrcs = Array.from(config.runtimeConfig.tabRoot.querySelectorAll(tabElementQueryString(config.staticConfig, 'imgSrcs')))
+  const imageSrcs = Array.from(config.runtimeConfig.tabRoot.querySelectorAll(extensionElementById(config.staticConfig, 'imgSrcs')))
     .map((container) => container.querySelector('.output-html'))
     .filter(isNotNil)
     .reduce((acc, container) => {
@@ -127,11 +140,11 @@ const getImageSrcs = (config: BaseTabConfig): Nullable<TabElements['imageSrcs']>
 }
 
 const getRefreshButton = (config: BaseTabConfig): Nullable<HTMLButtonElement> => {
-  return config.runtimeConfig.tabRoot.querySelector<HTMLButtonElement>(tabElementQueryString(config.staticConfig, 'refreshButton'))
+  return config.runtimeConfig.tabRoot.querySelector<HTMLButtonElement>(extensionElementById(config.staticConfig, 'refreshButton'))
 }
 
 const getImageButtons = (config: BaseTabConfig): HTMLButtonElement[] => {
-  return Array.from(config.runtimeConfig.tabRoot.querySelectorAll(tabElementQueryString(config.staticConfig, 'imgButton')))
+  return Array.from(config.runtimeConfig.tabRoot.querySelectorAll(extensionElementById(config.staticConfig, 'imgButton')))
 }
 
 const getProgressBar = (config: BaseTabConfig): Nullable<Element> => {
@@ -142,11 +155,11 @@ const getProgressBar = (config: BaseTabConfig): Nullable<Element> => {
 }
 
 const getGallery = (config: BaseTabConfig): Nullable<Element> => {
-  return config.runtimeConfig.tabRoot.querySelector(tabElementQueryString(config.staticConfig, 'gallery'))
+  return config.runtimeConfig.tabRoot.querySelector(extensionElementById(config.staticConfig, 'gallery'))
 }
 
 const getGalleryContainer = (config: BaseTabConfig): Nullable<Element> => {
-  return config.runtimeConfig.tabRoot.querySelector(tabElementQueryString(config.staticConfig, 'galleryContainer'))
+  return config.runtimeConfig.tabRoot.querySelector(extensionElementById(config.staticConfig, 'galleryContainer'))
 }
 
 const getGenerateMissingThumbnailsButton = (config: BaseTabConfig): Nullable<HTMLButtonElement> => {
@@ -158,7 +171,7 @@ const getGenerateMissingThumbnailsContainer = (config: BaseTabConfig): Nullable<
 }
 
 const getDeselectImageButton = (config: BaseTabConfig): Nullable<HTMLButtonElement> => {
-  return config.runtimeConfig.tabRoot.querySelector<HTMLButtonElement>(tabElementQueryString(config.staticConfig, 'deselectImageButton'))
+  return config.runtimeConfig.tabRoot.querySelector<HTMLButtonElement>(extensionElementById(config.staticConfig, 'deselectImageButton'))
 }
 
 export const getElements = (config: BaseTabConfig): Nullable<TabElements> => {

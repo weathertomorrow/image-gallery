@@ -10,6 +10,7 @@ export type StaticConfig = typeof staticConfig
 
 export type RuntimeConfig = Readonly<{
   tabId: string
+  extensionRoot: Element
   appRoot: ShadowRoot
   tabRoot: HTMLElement
   preloadRoot: Element

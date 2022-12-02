@@ -139,7 +139,7 @@ export const makeClickSiblingToSelectedImage = (type: 'previous' | 'next', eleme
   }
 }
 
-type BigPictureModeHandlers = Readonly<{
+export type BigPictureModeHandlers = Readonly<{
   close: () => void
   update: SelectedImageCallback
   open: () => void
